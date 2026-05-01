@@ -395,6 +395,11 @@ Modified by Karim Mansur / Net Tech.
 
 See `LICENSE` for the full GPL-3.0 license text.
 
+This template is distributed independently and is not submitted to the official
+Zabbix Community Templates repository because it is a GPL-3.0 derivative of
+`AdvancedPING`. The official Zabbix Community Templates repository currently
+requires MIT licensing for contributed templates and additional files.
+
 ## Versioning
 
 Template vendor:
