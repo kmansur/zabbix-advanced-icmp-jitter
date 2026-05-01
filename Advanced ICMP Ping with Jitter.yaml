@@ -1,0 +1,385 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 57b7ae836ca64446ba2c296389c009b7
+      name: Templates/Modules
+  templates:
+    - uuid: afac17c2c17e443cbf0af2ae2963bede
+      template: 'Advanced ICMP Ping with Jitter'
+      name: 'Advanced ICMP Ping with Jitter'
+      description: |
+        Module Advanced ICMP Ping with Jitter based on AdvancedPING by Dusan Priechodsky.
+
+        Original project: https://github.com/priechodsky/AdvancedPING
+        Modified by Karim Mansur / Net Tech.
+        License: GNU General Public License v3.0 (GPL-3.0).
+      vendor:
+        name: 'Net Tech'
+        version: 1.0-4
+      groups:
+        - name: Templates/Modules
+      items:
+        - uuid: b483670491814d98b37dff153750a40e
+          name: 'ICMP average response time'
+          type: DEPENDENT
+          key: advanced.ping.avg
+          delay: '0'
+          history: 90d
+          value_type: FLOAT
+          units: ms
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.avg
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          tags:
+            - tag: application
+              value: status
+          triggers:
+            - uuid: f751fa9758054945915c723f0239f4e2
+              expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.avg,5m)>{$ADV_ICMP_RESPONSE_TIME_WARN}'
+              name: 'High ICMP ping response time'
+              opdata: 'Last value: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              dependencies:
+                - name: 'High ICMP ping loss'
+                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
+                - name: 'Unavailable by ICMP ping'
+                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+        - uuid: eb3e547aeda94ba999b0e84f78c9bfb7
+          name: 'ICMP packet loss'
+          type: DEPENDENT
+          key: advanced.ping.loss
+          delay: '0'
+          history: 90d
+          units: '%'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.loss
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          tags:
+            - tag: application
+              value: status
+          triggers:
+            - uuid: bb58843328ad49e6a9ac912dc5941998
+              expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
+              name: 'High ICMP ping loss'
+              opdata: 'Last value: {ITEM.LASTVALUE1} %'
+              priority: WARNING
+              dependencies:
+                - name: 'Unavailable by ICMP ping'
+                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+        - uuid: 982689cec232435fb57158b5f617ca3f
+          name: 'ICMP maximum response time'
+          type: DEPENDENT
+          key: advanced.ping.max
+          delay: '0'
+          history: 90d
+          value_type: FLOAT
+          units: ms
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.max
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          tags:
+            - tag: application
+              value: status
+        - uuid: 2c67d51b3fb64d2288bf6dd7ad6d55d7
+          name: 'ICMP minimum response time'
+          type: DEPENDENT
+          key: advanced.ping.min
+          delay: '0'
+          history: 90d
+          value_type: FLOAT
+          units: ms
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.min
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          tags:
+            - tag: application
+              value: status
+        - uuid: 1670e4d8e9054effa23a6b598e325caa
+          name: 'ICMP packets received'
+          type: DEPENDENT
+          key: advanced.ping.rcv
+          delay: '0'
+          history: 90d
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.rcv
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          tags:
+            - tag: application
+              value: status
+          triggers:
+            - uuid: e80be54fd2174e84b64ec3a9261864d9
+              expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0'
+              name: 'Total Unavailable by ICMP ping'
+              opdata: 'Last value: {ITEM.LASTVALUE1}'
+              status: DISABLED
+              priority: DISASTER
+            - uuid: 060dd4f74b0a4f83aa75b27623050c0a
+              expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+              name: 'Unavailable by ICMP ping'
+              opdata: 'Last value: {ITEM.LASTVALUE1}'
+              priority: HIGH
+        - uuid: cebaebd5d69049409b968486ffb96ae9
+          name: 'ICMP packets sent'
+          type: DEPENDENT
+          key: advanced.ping.xmt
+          delay: '0'
+          history: 90d
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.xmt
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          tags:
+            - tag: application
+              value: status
+        - uuid: d9869868444741b89cdca6911682582b
+          name: 'ICMP raw JSON results'
+          type: EXTERNAL
+          key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          history: 90d
+          value_type: TEXT
+          trends: '0'
+          timeout: 30s
+          tags:
+            - tag: application
+              value: status
+        - uuid: 7bcb6943d5eb46b692dcf31e88fa3938
+          name: 'ICMP jitter'
+          type: DEPENDENT
+          key: advanced.ping.jitter
+          delay: '0'
+          history: 90d
+          value_type: FLOAT
+          units: ms
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.jitter
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          description: 'ICMP jitter calculated from individual fping RTT samples as the average absolute difference between consecutive received packets.'
+          triggers:
+            - uuid: 9a9d437b891c4763a44dfe3f9505e7da
+              expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.jitter,5m)>{$ADV_ICMP_JITTER_WARN}'
+              name: 'High ICMP ping jitter'
+              opdata: 'Last value: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              dependencies:
+                - name: 'High ICMP ping loss'
+                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
+                - name: 'Unavailable by ICMP ping'
+                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+          tags:
+            - tag: component
+              value: health
+            - tag: component
+              value: network
+        - uuid: 9d983174608b4f3db4d0960aff79ed6d
+          name: 'ICMP RTT standard deviation'
+          type: DEPENDENT
+          key: advanced.ping.stddev
+          delay: '0'
+          history: 90d
+          value_type: FLOAT
+          units: ms
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.stddev
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          description: 'Population standard deviation of the received ICMP RTT samples.'
+          triggers:
+            - uuid: 80d9bf40f49a4fdf917c9371b0cfb0e3
+              expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.stddev,5m)>{$ADV_ICMP_STDDEV_WARN}'
+              name: 'High ICMP RTT standard deviation'
+              opdata: 'Last value: {ITEM.LASTVALUE1}'
+              status: DISABLED
+              priority: WARNING
+              dependencies:
+                - name: 'High ICMP ping loss'
+                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
+                - name: 'Unavailable by ICMP ping'
+                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+          tags:
+            - tag: component
+              value: health
+            - tag: component
+              value: network
+        - uuid: 27e61fa62b8c405da36588bd5c24b379
+          name: 'ICMP collector error'
+          type: DEPENDENT
+          key: advanced.ping.error
+          delay: '0'
+          history: 90d
+          value_type: TEXT
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.error
+          master_item:
+            key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+          description: 'Error message returned by the ICMP collector. Empty when collection succeeds.'
+          triggers:
+            - uuid: 433ce45731234c51aa71cb0e2f9d3a38
+              expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""'
+              name: 'ICMP collector error'
+              opdata: 'Last error: {ITEM.LASTVALUE1}'
+              priority: WARNING
+          tags:
+            - tag: component
+              value: health
+            - tag: component
+              value: network
+      tags:
+        - tag: class
+          value: network
+        - tag: target
+          value: icmp
+      macros:
+        - macro: '{$ADV_FPING_POOL_COUNT}'
+          value: '20'
+          description: 'Number of ICMP probes in each measurement batch. Use at least 10 for meaningful jitter.'
+        - macro: '{$ADV_FPING_INTERVAL_MS}'
+          value: '100'
+          description: 'Interval between ICMP probes in milliseconds.'
+        - macro: '{$ADV_FPING_TIMEOUT_MS}'
+          value: '1000'
+          description: 'Timeout for each ICMP probe in milliseconds.'
+        - macro: '{$ADV_ICMP_LOSS_WARN}'
+          value: '20'
+          description: '%'
+        - macro: '{$ADV_ICMP_JITTER_WARN}'
+          value: '20'
+          description: 'Jitter warning threshold in milliseconds.'
+        - macro: '{$ADV_ICMP_MAX_TIME_MULTIPLE}'
+          value: '30'
+          description: 'maximum possible multiple between min and max'
+        - macro: '{$ADV_ICMP_RESPONSE_TIME_WARN}'
+          value: '200'
+          description: ms
+        - macro: '{$ADV_ICMP_STDDEV_WARN}'
+          value: '30'
+          description: 'RTT standard deviation warning threshold in milliseconds. The default trigger is disabled.'
+      dashboards:
+        - uuid: 6fe11985dbcd469ea3f5d75b520a4ae9
+          name: 'Advanced ICMP PING'
+          pages:
+            - widgets:
+                - type: graph
+                  width: '72'
+                  height: '7'
+                  fields:
+                    - type: GRAPH
+                      name: graphid.0
+                      value:
+                        host: 'Advanced ICMP Ping with Jitter'
+                        name: 'ICMP latency, loss, jitter and deviation'
+                    - type: STRING
+                      name: reference
+                      value: AAAAA
+                - type: itemhistory
+                  'y': '7'
+                  width: '72'
+                  height: '4'
+                  fields:
+                    - type: ITEM
+                      name: columns.0.itemid
+                      value:
+                        host: 'Advanced ICMP Ping with Jitter'
+                        key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
+                    - type: INTEGER
+                      name: columns.0.monospace_font
+                      value: '1'
+                    - type: STRING
+                      name: columns.0.name
+                      value: 'ICMP raw JSON results'
+                    - type: STRING
+                      name: reference
+                      value: AAACA
+                    - type: INTEGER
+                      name: show_lines
+                      value: '5'
+                    - type: INTEGER
+                      name: show_timestamp
+                      value: '1'
+                    - type: STRING
+                      name: time_period.from
+                      value: now-1y
+                    - type: STRING
+                      name: time_period.to
+                      value: now
+  triggers:
+    - uuid: 78a9e6a9e9d34128b659e18871d6e3d1
+      expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.max,5m)/avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,5m)>{$ADV_ICMP_MAX_TIME_MULTIPLE}'
+      name: 'High ICMP ping time differences (Min/Max)'
+      opdata: 'Last min: {ITEM.LASTVALUE2}, max: {ITEM.LASTVALUE1}'
+      priority: WARNING
+      dependencies:
+        - name: 'Unavailable by ICMP ping'
+          expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+  graphs:
+    - uuid: 41f93f2ee2b440bf953f7484c1883a25
+      name: 'ICMP latency, loss, jitter and deviation'
+      ymin_type_1: FIXED
+      ymax_type_1: FIXED
+      graph_items:
+        - drawtype: GRADIENT_LINE
+          color: FF0000
+          calc_fnc: ALL
+          item:
+            host: 'Advanced ICMP Ping with Jitter'
+            key: advanced.ping.loss
+        - sortorder: '1'
+          color: FF9800
+          yaxisside: RIGHT
+          calc_fnc: MAX
+          item:
+            host: 'Advanced ICMP Ping with Jitter'
+            key: advanced.ping.max
+        - sortorder: '2'
+          drawtype: GRADIENT_LINE
+          color: 00FF00
+          yaxisside: RIGHT
+          calc_fnc: MIN
+          item:
+            host: 'Advanced ICMP Ping with Jitter'
+            key: advanced.ping.min
+        - sortorder: '3'
+          drawtype: BOLD_LINE
+          color: FFFF00
+          yaxisside: RIGHT
+          item:
+            host: 'Advanced ICMP Ping with Jitter'
+            key: advanced.ping.avg
+        - sortorder: '4'
+          color: BF00FF
+          yaxisside: RIGHT
+          calc_fnc: ALL
+          item:
+            host: 'Advanced ICMP Ping with Jitter'
+            key: advanced.ping.jitter
+        - sortorder: '5'
+          color: 00BFFF
+          yaxisside: RIGHT
+          calc_fnc: ALL
+          item:
+            host: 'Advanced ICMP Ping with Jitter'
+            key: advanced.ping.stddev
