@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Advanced ICMP Ping with Jitter
-Version: 1.0.3
+Version: 1.0.5
 
 Author: Karim Mansur
 Original inspiration: Advanced ICMP Ping by Dusan Priechodsky
@@ -84,6 +84,7 @@ def parse_fping_output(output, expected_count=None):
     list produced by "-C":
 
         8.8.8.8 : 10.1 10.3 - 11.0
+        2001:db8::1 : 10.1 10.3 - 11.0
 
     A dash means the packet was transmitted but no reply was received. It is
     stored as None so packet loss can be calculated without pretending the RTT
@@ -91,8 +92,10 @@ def parse_fping_output(output, expected_count=None):
 
     Some fping builds or manual tests may include verbose lines. To avoid
     parsing those by accident, a valid sample line must contain only numeric RTT
-    values or "-". When the expected probe count is known, the parser prefers a
-    candidate line with exactly that number of samples.
+    values or "-". The split is done from the right side using " : " so IPv6
+    target addresses are not broken by their internal colons. When the expected
+    probe count is known, the parser prefers a candidate line with exactly that
+    number of samples.
     """
     candidates = []
 
@@ -100,7 +103,10 @@ def parse_fping_output(output, expected_count=None):
         if ":" not in line:
             continue
 
-        _, samples = line.split(":", 1)
+        if " : " not in line:
+            continue
+
+        _, samples = line.rsplit(" : ", 1)
         tokens = samples.strip().split()
         if not tokens:
             continue

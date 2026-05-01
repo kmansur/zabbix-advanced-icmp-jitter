@@ -183,6 +183,25 @@ The template includes a trigger for this condition.
 The template uses `{HOST.CONN}` as the target. Make sure the linked host has a
 valid interface address or DNS name.
 
+## Supported Target Formats
+
+The collector supports targets accepted by `fping`, including:
+
+- IPv4 addresses, such as `8.8.8.8`.
+- DNS names, such as `example.com`.
+- IPv6 addresses, such as `2001:4860:4860::8888`, when IPv6 routing and `fping`
+  IPv6 support are available on the Zabbix server or proxy.
+
+Manual IPv6 test:
+
+```sh
+sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 2001:4860:4860::8888 20 100 1000
+```
+
+If the host uses DNS, remember that `{HOST.CONN}` depends on the selected
+interface connection mode in Zabbix. Confirm that the resolved target is the one
+you expect.
+
 ## Default Macros
 
 | Macro | Default | Meaning |
@@ -367,13 +386,13 @@ Template vendor:
 ```yaml
 vendor:
   name: 'Net Tech'
-  version: 1.0-4
+  version: 1.0-5
 ```
 
 Collector script:
 
 ```text
-advanced_icmp_ping.py version 1.0.3
+advanced_icmp_ping.py version 1.0.5
 ```
 
 Every functional template change should increment `vendor.version`.
