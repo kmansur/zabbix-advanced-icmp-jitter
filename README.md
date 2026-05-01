@@ -160,7 +160,9 @@ Expected output format:
 ```
 
 The `rtts` array in real output will contain all received RTT samples. It is
-kept mainly for troubleshooting and visibility in the raw JSON item.
+kept mainly for troubleshooting and visibility in the raw JSON item. The raw
+JSON item is not shown on the default dashboard because the payload can be long;
+open the item history directly when you need to inspect collector details.
 
 If there is a collector problem, the script still returns valid JSON:
 
@@ -306,6 +308,15 @@ The standard deviation trigger is disabled by default because not every network
 needs alerting on dispersion. Enable it for links where latency stability is
 important.
 
+## Dashboard
+
+The template includes one default dashboard with the graph
+`ICMP latency, loss, jitter and deviation`.
+
+The raw JSON item is intentionally not displayed on the dashboard. It remains in
+the template for troubleshooting, but the dashboard focuses on visual metrics
+that are easier to read during routine monitoring.
+
 ## Troubleshooting
 
 ### Zabbix item says the script cannot be found
@@ -386,7 +397,7 @@ Template vendor:
 ```yaml
 vendor:
   name: 'Net Tech'
-  version: 1.0-5
+  version: 1.0-6
 ```
 
 Collector script:

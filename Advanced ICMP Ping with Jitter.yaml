@@ -15,7 +15,7 @@ zabbix_export:
         License: GNU General Public License v3.0 (GPL-3.0).
       vendor:
         name: 'Net Tech'
-        version: 1.0-5
+        version: 1.0-6
       groups:
         - name: Templates/Modules
       items:
@@ -285,7 +285,7 @@ zabbix_export:
             - widgets:
                 - type: graph
                   width: '72'
-                  height: '7'
+                  height: '11'
                   fields:
                     - type: GRAPH
                       name: graphid.0
@@ -295,37 +295,6 @@ zabbix_export:
                     - type: STRING
                       name: reference
                       value: AAAAA
-                - type: itemhistory
-                  'y': '7'
-                  width: '72'
-                  height: '4'
-                  fields:
-                    - type: ITEM
-                      name: columns.0.itemid
-                      value:
-                        host: 'Advanced ICMP Ping with Jitter'
-                        key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
-                    - type: INTEGER
-                      name: columns.0.monospace_font
-                      value: '1'
-                    - type: STRING
-                      name: columns.0.name
-                      value: 'ICMP raw JSON results'
-                    - type: STRING
-                      name: reference
-                      value: AAACA
-                    - type: INTEGER
-                      name: show_lines
-                      value: '5'
-                    - type: INTEGER
-                      name: show_timestamp
-                      value: '1'
-                    - type: STRING
-                      name: time_period.from
-                      value: now-1y
-                    - type: STRING
-                      name: time_period.to
-                      value: now
   triggers:
     - uuid: 78a9e6a9e9d34128b659e18871d6e3d1
       expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,5m)>0 and avg(/Advanced ICMP Ping with Jitter/advanced.ping.max,5m)/avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,5m)>{$ADV_ICMP_MAX_TIME_MULTIPLE}'

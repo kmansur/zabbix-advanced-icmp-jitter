@@ -10,6 +10,18 @@ vendor:
   version: x.y-z
 ```
 
+## [1.0-6] - 2026-05-01
+
+### Changed
+
+- Removed the `itemhistory` widget for the raw JSON master item from the default
+  dashboard.
+- Increased the default graph widget height so the dashboard focuses on visual
+  ICMP metrics.
+- Kept `ICMP raw JSON results` as an item for troubleshooting.
+- Updated the README to explain why raw JSON is not shown on the dashboard.
+- Updated the template vendor version to `1.0-6`.
+
 ## [1.0-5] - 2026-05-01
 
 ### Fixed
