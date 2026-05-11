@@ -15,12 +15,12 @@ zabbix_export:
         License: GNU General Public License v3.0 (GPL-3.0).
       vendor:
         name: 'Net Tech'
-        version: 1.0-8
+        version: 1.0-9
       groups:
         - name: Templates/Modules
       items:
         - uuid: b483670491814d98b37dff153750a40e
-          name: 'ICMP average response time'
+          name: 'Advanced ICMP: average response time'
           type: DEPENDENT
           key: advanced.ping.avg
           delay: '0'
@@ -48,7 +48,7 @@ zabbix_export:
                 - name: 'Advanced ICMP: Unavailable by ICMP ping'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
         - uuid: eb3e547aeda94ba999b0e84f78c9bfb7
-          name: 'ICMP packet loss'
+          name: 'Advanced ICMP: packet loss'
           type: DEPENDENT
           key: advanced.ping.loss
           delay: '0'
@@ -73,7 +73,7 @@ zabbix_export:
                 - name: 'Advanced ICMP: Unavailable by ICMP ping'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
         - uuid: 982689cec232435fb57158b5f617ca3f
-          name: 'ICMP maximum response time'
+          name: 'Advanced ICMP: maximum response time'
           type: DEPENDENT
           key: advanced.ping.max
           delay: '0'
@@ -90,7 +90,7 @@ zabbix_export:
             - tag: application
               value: status
         - uuid: 2c67d51b3fb64d2288bf6dd7ad6d55d7
-          name: 'ICMP minimum response time'
+          name: 'Advanced ICMP: minimum response time'
           type: DEPENDENT
           key: advanced.ping.min
           delay: '0'
@@ -107,7 +107,7 @@ zabbix_export:
             - tag: application
               value: status
         - uuid: 1670e4d8e9054effa23a6b598e325caa
-          name: 'ICMP packets received'
+          name: 'Advanced ICMP: packets received'
           type: DEPENDENT
           key: advanced.ping.rcv
           delay: '0'
@@ -134,7 +134,7 @@ zabbix_export:
               opdata: 'Last value: {ITEM.LASTVALUE1}'
               priority: HIGH
         - uuid: cebaebd5d69049409b968486ffb96ae9
-          name: 'ICMP packets sent'
+          name: 'Advanced ICMP: packets sent'
           type: DEPENDENT
           key: advanced.ping.xmt
           delay: '0'
@@ -149,7 +149,7 @@ zabbix_export:
             - tag: application
               value: status
         - uuid: d9869868444741b89cdca6911682582b
-          name: 'ICMP raw JSON results'
+          name: 'Advanced ICMP: raw JSON results'
           type: EXTERNAL
           key: 'advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]'
           history: 90d
@@ -160,7 +160,7 @@ zabbix_export:
             - tag: application
               value: status
         - uuid: 7bcb6943d5eb46b692dcf31e88fa3938
-          name: 'ICMP jitter'
+          name: 'Advanced ICMP: jitter'
           type: DEPENDENT
           key: advanced.ping.jitter
           delay: '0'
@@ -191,7 +191,7 @@ zabbix_export:
             - tag: component
               value: network
         - uuid: 9d983174608b4f3db4d0960aff79ed6d
-          name: 'ICMP RTT standard deviation'
+          name: 'Advanced ICMP: RTT standard deviation'
           type: DEPENDENT
           key: advanced.ping.stddev
           delay: '0'
@@ -223,7 +223,7 @@ zabbix_export:
             - tag: component
               value: network
         - uuid: 27e61fa62b8c405da36588bd5c24b379
-          name: 'ICMP collector error'
+          name: 'Advanced ICMP: collector error'
           type: DEPENDENT
           key: advanced.ping.error
           delay: '0'

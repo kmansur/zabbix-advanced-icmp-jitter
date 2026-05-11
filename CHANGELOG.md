@@ -10,6 +10,17 @@ vendor:
   version: x.y-z
 ```
 
+## [1.0-9] - 2026-05-11
+
+### Changed
+
+- Added the `Advanced ICMP:` prefix to visible item names to make them easier
+  to identify in Zabbix views shared with standard ICMP monitoring.
+- Kept item keys unchanged to preserve history, trigger references, and
+  compatibility.
+- Updated the README item table with the new visible item names.
+- Updated the template vendor version to `1.0-9`.
+
 ## [1.0-8] - 2026-05-11
 
 ### Fixed

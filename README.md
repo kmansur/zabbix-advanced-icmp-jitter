@@ -278,16 +278,16 @@ For example:
 
 | Item | Key | Type |
 | --- | --- | --- |
-| ICMP raw JSON results | `advanced_icmp_ping.py[...]` | External |
-| ICMP average response time | `advanced.ping.avg` | Dependent |
-| ICMP minimum response time | `advanced.ping.min` | Dependent |
-| ICMP maximum response time | `advanced.ping.max` | Dependent |
-| ICMP packet loss | `advanced.ping.loss` | Dependent |
-| ICMP packets sent | `advanced.ping.xmt` | Dependent |
-| ICMP packets received | `advanced.ping.rcv` | Dependent |
-| ICMP jitter | `advanced.ping.jitter` | Dependent |
-| ICMP RTT standard deviation | `advanced.ping.stddev` | Dependent |
-| ICMP collector error | `advanced.ping.error` | Dependent |
+| Advanced ICMP: raw JSON results | `advanced_icmp_ping.py[...]` | External |
+| Advanced ICMP: average response time | `advanced.ping.avg` | Dependent |
+| Advanced ICMP: minimum response time | `advanced.ping.min` | Dependent |
+| Advanced ICMP: maximum response time | `advanced.ping.max` | Dependent |
+| Advanced ICMP: packet loss | `advanced.ping.loss` | Dependent |
+| Advanced ICMP: packets sent | `advanced.ping.xmt` | Dependent |
+| Advanced ICMP: packets received | `advanced.ping.rcv` | Dependent |
+| Advanced ICMP: jitter | `advanced.ping.jitter` | Dependent |
+| Advanced ICMP: RTT standard deviation | `advanced.ping.stddev` | Dependent |
+| Advanced ICMP: collector error | `advanced.ping.error` | Dependent |
 
 ## Triggers
 
@@ -416,7 +416,7 @@ Template vendor:
 ```yaml
 vendor:
   name: 'Net Tech'
-  version: 1.0-8
+  version: 1.0-9
 ```
 
 Collector script:
