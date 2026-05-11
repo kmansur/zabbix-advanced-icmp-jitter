@@ -15,7 +15,7 @@ zabbix_export:
         License: GNU General Public License v3.0 (GPL-3.0).
       vendor:
         name: 'Net Tech'
-        version: 1.0-6
+        version: 1.0-7
       groups:
         - name: Templates/Modules
       items:
@@ -39,13 +39,13 @@ zabbix_export:
           triggers:
             - uuid: f751fa9758054945915c723f0239f4e2
               expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.avg,5m)>{$ADV_ICMP_RESPONSE_TIME_WARN}'
-              name: 'High ICMP ping response time'
+              name: 'Advanced ICMP: High response time'
               opdata: 'Last value: {ITEM.LASTVALUE1}'
               priority: WARNING
               dependencies:
-                - name: 'High ICMP ping loss'
+                - name: 'Advanced ICMP: High packet loss'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
-                - name: 'Unavailable by ICMP ping'
+                - name: 'Advanced ICMP: Unavailable by ICMP ping'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
         - uuid: eb3e547aeda94ba999b0e84f78c9bfb7
           name: 'ICMP packet loss'
@@ -66,11 +66,11 @@ zabbix_export:
           triggers:
             - uuid: bb58843328ad49e6a9ac912dc5941998
               expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
-              name: 'High ICMP ping loss'
+              name: 'Advanced ICMP: High packet loss'
               opdata: 'Last value: {ITEM.LASTVALUE1} %'
               priority: WARNING
               dependencies:
-                - name: 'Unavailable by ICMP ping'
+                - name: 'Advanced ICMP: Unavailable by ICMP ping'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
         - uuid: 982689cec232435fb57158b5f617ca3f
           name: 'ICMP maximum response time'
@@ -124,13 +124,13 @@ zabbix_export:
           triggers:
             - uuid: e80be54fd2174e84b64ec3a9261864d9
               expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0'
-              name: 'Total Unavailable by ICMP ping'
+              name: 'Advanced ICMP: Total unavailable by ICMP ping'
               opdata: 'Last value: {ITEM.LASTVALUE1}'
               status: DISABLED
               priority: DISASTER
             - uuid: 060dd4f74b0a4f83aa75b27623050c0a
               expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
-              name: 'Unavailable by ICMP ping'
+              name: 'Advanced ICMP: Unavailable by ICMP ping'
               opdata: 'Last value: {ITEM.LASTVALUE1}'
               priority: HIGH
         - uuid: cebaebd5d69049409b968486ffb96ae9
@@ -177,13 +177,13 @@ zabbix_export:
           triggers:
             - uuid: 9a9d437b891c4763a44dfe3f9505e7da
               expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.jitter,5m)>{$ADV_ICMP_JITTER_WARN}'
-              name: 'High ICMP ping jitter'
+              name: 'Advanced ICMP: High jitter'
               opdata: 'Last value: {ITEM.LASTVALUE1}'
               priority: WARNING
               dependencies:
-                - name: 'High ICMP ping loss'
+                - name: 'Advanced ICMP: High packet loss'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
-                - name: 'Unavailable by ICMP ping'
+                - name: 'Advanced ICMP: Unavailable by ICMP ping'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
           tags:
             - tag: component
@@ -208,14 +208,14 @@ zabbix_export:
           triggers:
             - uuid: 80d9bf40f49a4fdf917c9371b0cfb0e3
               expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.stddev,5m)>{$ADV_ICMP_STDDEV_WARN}'
-              name: 'High ICMP RTT standard deviation'
+              name: 'Advanced ICMP: High RTT standard deviation'
               opdata: 'Last value: {ITEM.LASTVALUE1}'
               status: DISABLED
               priority: WARNING
               dependencies:
-                - name: 'High ICMP ping loss'
+                - name: 'Advanced ICMP: High packet loss'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
-                - name: 'Unavailable by ICMP ping'
+                - name: 'Advanced ICMP: Unavailable by ICMP ping'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
           tags:
             - tag: component
@@ -240,7 +240,7 @@ zabbix_export:
           triggers:
             - uuid: 433ce45731234c51aa71cb0e2f9d3a38
               expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""'
-              name: 'ICMP collector error'
+              name: 'Advanced ICMP: Collector error'
               opdata: 'Last error: {ITEM.LASTVALUE1}'
               priority: WARNING
           tags:
@@ -280,7 +280,7 @@ zabbix_export:
           description: 'RTT standard deviation warning threshold in milliseconds. The default trigger is disabled.'
       dashboards:
         - uuid: 6fe11985dbcd469ea3f5d75b520a4ae9
-          name: 'Advanced ICMP PING'
+          name: 'Advanced ICMP'
           pages:
             - widgets:
                 - type: graph
@@ -291,22 +291,24 @@ zabbix_export:
                       name: graphid.0
                       value:
                         host: 'Advanced ICMP Ping with Jitter'
-                        name: 'ICMP latency, loss, jitter and deviation'
+                        name: 'Advanced ICMP: latency, loss, jitter and deviation'
                     - type: STRING
                       name: reference
                       value: AAAAA
   triggers:
     - uuid: 78a9e6a9e9d34128b659e18871d6e3d1
       expression: 'avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,5m)>0 and avg(/Advanced ICMP Ping with Jitter/advanced.ping.max,5m)/avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,5m)>{$ADV_ICMP_MAX_TIME_MULTIPLE}'
-      name: 'High ICMP ping time differences (Min/Max)'
+      name: 'Advanced ICMP: High time differences (Min/Max)'
       opdata: 'Last min: {ITEM.LASTVALUE2}, max: {ITEM.LASTVALUE1}'
       priority: WARNING
       dependencies:
-        - name: 'Unavailable by ICMP ping'
+        - name: 'Advanced ICMP: Unavailable by ICMP ping'
           expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
   graphs:
     - uuid: 41f93f2ee2b440bf953f7484c1883a25
-      name: 'ICMP latency, loss, jitter and deviation'
+      name: 'Advanced ICMP: latency, loss, jitter and deviation'
+      yaxismin: 0
+      yaxismax: 200
       ymin_type_1: FIXED
       ymax_type_1: FIXED
       graph_items:

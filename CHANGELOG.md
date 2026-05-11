@@ -10,6 +10,20 @@ vendor:
   version: x.y-z
 ```
 
+## [1.0-7] - 2026-05-11
+
+### Changed
+
+- Added the `Advanced ICMP:` prefix to trigger names to avoid confusion with
+  standard ICMP triggers in global Zabbix views.
+- Renamed the default dashboard to `Advanced ICMP`.
+- Renamed the graph to `Advanced ICMP: latency, loss, jitter and deviation`.
+- Set the classic graph fixed Y-axis range to `0-200` to preserve visual
+  comparison across hosts while preventing common WAN latency peaks from being
+  clipped.
+- Updated the README with the fixed-axis behavior and renamed trigger examples.
+- Updated the template vendor version to `1.0-7`.
+
 ## [1.0-6] - 2026-05-01
 
 ### Changed

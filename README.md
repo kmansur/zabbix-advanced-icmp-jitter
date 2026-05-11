@@ -293,17 +293,17 @@ For example:
 
 Enabled by default:
 
-- `Unavailable by ICMP ping`
-- `High ICMP ping loss`
-- `High ICMP ping response time`
-- `High ICMP ping jitter`
-- `High ICMP ping time differences`
-- `ICMP collector error`
+- `Advanced ICMP: Unavailable by ICMP ping`
+- `Advanced ICMP: High packet loss`
+- `Advanced ICMP: High response time`
+- `Advanced ICMP: High jitter`
+- `Advanced ICMP: High time differences (Min/Max)`
+- `Advanced ICMP: Collector error`
 
 Disabled by default:
 
-- `Total Unavailable by ICMP ping`
-- `High ICMP RTT standard deviation`
+- `Advanced ICMP: Total unavailable by ICMP ping`
+- `Advanced ICMP: High RTT standard deviation`
 
 The standard deviation trigger is disabled by default because not every network
 needs alerting on dispersion. Enable it for links where latency stability is
@@ -312,15 +312,24 @@ important.
 ## Dashboard
 
 The template includes one default dashboard with the graph
-`ICMP latency, loss, jitter and deviation`.
+`Advanced ICMP: latency, loss, jitter and deviation`.
 
 The raw JSON item is intentionally not displayed on the dashboard. It remains in
 the template for troubleshooting, but the dashboard focuses on visual metrics
 that are easier to read during routine monitoring.
 
-Example graph:
+The classic graph uses a fixed `0-200` Y-axis range. This keeps graphs visually
+comparable across hosts and prevents common WAN latency peaks from being clipped.
+Because classic Zabbix graphs use a single fixed range for both left and right
+axes, packet loss remains a percentage series while latency, jitter, and
+deviation use the right-side millisecond scale.
+
+Example graph layout:
 
 ![Advanced ICMP Ping with Jitter graph](advanced_icmp_ping.png)
+
+The screenshot is an example of the graph layout. In version `1.0-7`, the graph
+uses a fixed `0-200` Y-axis range.
 
 ## Troubleshooting
 
@@ -407,7 +416,7 @@ Template vendor:
 ```yaml
 vendor:
   name: 'Net Tech'
-  version: 1.0-6
+  version: 1.0-7
 ```
 
 Collector script:
