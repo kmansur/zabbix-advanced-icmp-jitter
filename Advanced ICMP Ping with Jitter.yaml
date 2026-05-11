@@ -15,7 +15,7 @@ zabbix_export:
         License: GNU General Public License v3.0 (GPL-3.0).
       vendor:
         name: 'Net Tech'
-        version: 1.0-7
+        version: 1.0-8
       groups:
         - name: Templates/Modules
       items:
@@ -307,8 +307,8 @@ zabbix_export:
   graphs:
     - uuid: 41f93f2ee2b440bf953f7484c1883a25
       name: 'Advanced ICMP: latency, loss, jitter and deviation'
-      yaxismin: 0
-      yaxismax: 200
+      yaxismin: '0'
+      yaxismax: '200'
       ymin_type_1: FIXED
       ymax_type_1: FIXED
       graph_items:

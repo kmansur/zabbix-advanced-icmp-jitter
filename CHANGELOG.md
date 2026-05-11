@@ -10,6 +10,14 @@ vendor:
   version: x.y-z
 ```
 
+## [1.0-8] - 2026-05-11
+
+### Fixed
+
+- Fixed Zabbix import validation for graph `yaxismin` and `yaxismax` by
+  exporting fixed axis values as strings.
+- Updated the template vendor version to `1.0-8`.
+
 ## [1.0-7] - 2026-05-11
 
 ### Changed
