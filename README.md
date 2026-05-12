@@ -294,6 +294,7 @@ For example:
 Enabled by default:
 
 - `Advanced ICMP: Unavailable by ICMP ping`
+- `Advanced ICMP: Long unavailable by ICMP ping`
 - `Advanced ICMP: High packet loss`
 - `Advanced ICMP: High response time`
 - `Advanced ICMP: High jitter`
@@ -302,8 +303,30 @@ Enabled by default:
 
 Disabled by default:
 
-- `Advanced ICMP: Total unavailable by ICMP ping`
 - `Advanced ICMP: High RTT standard deviation`
+
+The unavailable trigger is a short outage signal. It enters problem state only
+when no ICMP replies are received during the last 3 collected batches:
+
+```text
+max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
+```
+
+The long unavailable trigger is an escalation signal. It enters problem state
+only when no ICMP replies are received during the last 30 collected batches:
+
+```text
+max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0
+```
+
+`Advanced ICMP: Unavailable by ICMP ping` depends on
+`Advanced ICMP: Long unavailable by ICMP ping`. This keeps the short outage alert
+from being shown together with the long outage alert when the issue escalates.
+
+Both unavailable triggers recover automatically when the host starts answering
+again. No separate recovery expression is required because the problem
+expression becomes false as soon as `rcv` is greater than `0` inside the
+evaluated window.
 
 The standard deviation trigger is disabled by default because not every network
 needs alerting on dispersion. Enable it for links where latency stability is
@@ -416,7 +439,7 @@ Template vendor:
 ```yaml
 vendor:
   name: 'Net Tech'
-  version: 1.0-9
+  version: 1.0-10
 ```
 
 Collector script:

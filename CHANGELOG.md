@@ -10,6 +10,22 @@ vendor:
   version: x.y-z
 ```
 
+## [1.0-10] - 2026-05-11
+
+### Changed
+
+- Enabled the long ICMP unavailability trigger as an escalation signal.
+- Renamed `Advanced ICMP: Total unavailable by ICMP ping` to
+  `Advanced ICMP: Long unavailable by ICMP ping` for clearer intent.
+- Changed unavailable trigger expressions from `last(...,#N)=0` to
+  `max(...,#N)=0` so the short and long outage triggers evaluate full windows
+  of consecutive failed collections.
+- Added a dependency from `Advanced ICMP: Unavailable by ICMP ping` to
+  `Advanced ICMP: Long unavailable by ICMP ping` to avoid duplicate visible
+  problems during extended outages.
+- Documented the automatic recovery behavior for unavailable triggers.
+- Updated the template vendor version to `1.0-10`.
+
 ## [1.0-9] - 2026-05-11
 
 ### Changed

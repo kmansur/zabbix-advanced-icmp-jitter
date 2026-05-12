@@ -15,7 +15,7 @@ zabbix_export:
         License: GNU General Public License v3.0 (GPL-3.0).
       vendor:
         name: 'Net Tech'
-        version: 1.0-9
+        version: 1.0-10
       groups:
         - name: Templates/Modules
       items:
@@ -46,7 +46,7 @@ zabbix_export:
                 - name: 'Advanced ICMP: High packet loss'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
                 - name: 'Advanced ICMP: Unavailable by ICMP ping'
-                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+                  expression: 'max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
         - uuid: eb3e547aeda94ba999b0e84f78c9bfb7
           name: 'Advanced ICMP: packet loss'
           type: DEPENDENT
@@ -71,7 +71,7 @@ zabbix_export:
               priority: WARNING
               dependencies:
                 - name: 'Advanced ICMP: Unavailable by ICMP ping'
-                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+                  expression: 'max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
         - uuid: 982689cec232435fb57158b5f617ca3f
           name: 'Advanced ICMP: maximum response time'
           type: DEPENDENT
@@ -123,16 +123,18 @@ zabbix_export:
               value: status
           triggers:
             - uuid: e80be54fd2174e84b64ec3a9261864d9
-              expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0'
-              name: 'Advanced ICMP: Total unavailable by ICMP ping'
+              expression: 'max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0'
+              name: 'Advanced ICMP: Long unavailable by ICMP ping'
               opdata: 'Last value: {ITEM.LASTVALUE1}'
-              status: DISABLED
               priority: DISASTER
             - uuid: 060dd4f74b0a4f83aa75b27623050c0a
-              expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+              expression: 'max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
               name: 'Advanced ICMP: Unavailable by ICMP ping'
               opdata: 'Last value: {ITEM.LASTVALUE1}'
               priority: HIGH
+              dependencies:
+                - name: 'Advanced ICMP: Long unavailable by ICMP ping'
+                  expression: 'max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0'
         - uuid: cebaebd5d69049409b968486ffb96ae9
           name: 'Advanced ICMP: packets sent'
           type: DEPENDENT
@@ -184,7 +186,7 @@ zabbix_export:
                 - name: 'Advanced ICMP: High packet loss'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
                 - name: 'Advanced ICMP: Unavailable by ICMP ping'
-                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+                  expression: 'max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
           tags:
             - tag: component
               value: health
@@ -216,7 +218,7 @@ zabbix_export:
                 - name: 'Advanced ICMP: High packet loss'
                   expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}'
                 - name: 'Advanced ICMP: Unavailable by ICMP ping'
-                  expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+                  expression: 'max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
           tags:
             - tag: component
               value: health
@@ -303,7 +305,7 @@ zabbix_export:
       priority: WARNING
       dependencies:
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
-          expression: 'last(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
+          expression: 'max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0'
   graphs:
     - uuid: 41f93f2ee2b440bf953f7484c1883a25
       name: 'Advanced ICMP: latency, loss, jitter and deviation'
