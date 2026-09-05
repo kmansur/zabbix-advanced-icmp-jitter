@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a reproducible problem with the template or collector.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Do not include credentials, tokens, private IP plans, or other sensitive information.
+  - type: dropdown
+    id: zabbix-version
+    attributes:
+      label: Zabbix version
+      options:
+        - 7.0
+        - 8.0 Beta / RC
+        - 8.0 final
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: exact-build
+    attributes:
+      label: Exact Zabbix build
+      description: Example: 8.0.0beta2
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Zabbix server/proxy platform
+      description: Distribution/OS and version.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem description
+      description: Describe what happened and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reproducible sequence.
+    validations:
+      required: true
+  - type: textarea
+    id: collector-output
+    attributes:
+      label: Sanitized collector output
+      description: Include JSON or fping output only after removing sensitive data.
+      render: shell
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
