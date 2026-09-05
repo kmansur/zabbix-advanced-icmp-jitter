@@ -10,6 +10,25 @@ vendor:
   version: x.y-z
 ```
 
+## [Unreleased]
+
+### Added
+
+- Added `VERSION` as the repository-level source of the current functional template version.
+- Added unit tests and representative `fping` fixtures for IPv4, IPv6, packet loss, total loss, malformed output, statistics, and collector execution.
+- Added semantic validation for versioned Zabbix exports, including directory/export version matching and cross-version parity of UUIDs, keys, macros, triggers, dashboards, graphs, and vendor version.
+- Added CI for Python 3.9, 3.13, and 3.14 with compile checks, Ruff, pytest, and Zabbix template validation.
+- Added CodeQL, Dependabot, tagged release automation, PR template, and structured issue forms.
+- Added `SECURITY.md`, `CONTRIBUTING.md`, `NOTICE.md`, `.editorconfig`, `.gitattributes`, `.gitignore`, `pyproject.toml`, and development dependency definitions.
+- Split the Brazilian Portuguese documentation into installation, configuration, metrics, triggers, tuning, troubleshooting, Zabbix 8.0 compatibility, and versioning guides.
+
+### Changed
+
+- Moved the production collector from the repository root to `scripts/advanced_icmp_ping.py` without changing its monitoring logic.
+- Moved the example graph image to `docs/images/advanced-icmp-ping.png`.
+- Simplified the root `README.md` into a project landing page with compatibility, quick-start, development, and documentation links.
+- Documented that the current `1.0-10` version remains unchanged for repository-only reorganization and that the next functional release will transition to Semantic Versioning.
+
 ## [1.0-10] - 2026-05-11
 
 ### Changed
