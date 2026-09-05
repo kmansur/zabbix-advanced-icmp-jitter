@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Validate versioned Zabbix template exports and cross-version invariants."""
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import yaml
 
@@ -86,8 +86,12 @@ def template_signature(data):
     template = get_template(data)
     vendor = template.get("vendor", {})
 
-    items = {item["key"]: item["uuid"] for item in template.get("items", [])}
-    macros = {macro["macro"] for macro in template.get("macros", [])}
+    items = {
+        item["key"]: (item["uuid"], item.get("type", "")) for item in template.get("items", [])
+    }
+    macros = {
+        macro["macro"]: str(macro.get("value", "")) for macro in template.get("macros", [])
+    }
     dashboards = {
         dashboard["name"]: dashboard["uuid"] for dashboard in template.get("dashboards", [])
     }
@@ -158,7 +162,9 @@ def validate_external_script_reference(exports):
 
     for version, (_, data) in exports.items():
         template = get_template(data)
-        external_items = [item for item in template.get("items", []) if item.get("type") == "EXTERNAL"]
+        external_items = [
+            item for item in template.get("items", []) if item.get("type") == "EXTERNAL"
+        ]
         if len(external_items) != 1:
             fail(f"Zabbix {version}: expected exactly one EXTERNAL item")
 
