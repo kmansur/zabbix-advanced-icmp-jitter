@@ -1,22 +1,32 @@
 # Advanced ICMP Ping with Jitter — Documentação em Português (Brasil)
 
-Template para Zabbix 7.0 destinado ao monitoramento avançado de ICMP, incluindo latência, perda de pacotes, jitter e desvio padrão de RTT usando `fping` e um script externo em Python.
+Template para monitoramento avançado de ICMP no Zabbix, incluindo latência, perda de pacotes, jitter e desvio padrão de RTT usando `fping` e um script externo em Python.
 
 O projeto é indicado para monitoramento de dispositivos de rede, links WAN, servidores, gateways e qualquer host em que disponibilidade ICMP e estabilidade de latência sejam importantes.
 
 ## Compatibilidade
 
-Esta versão do template foi exportada para:
+Exports disponíveis:
 
-- Zabbix 7.0.
+- **Zabbix 7.0**: versão suportada e mantida em `templates/zabbix-7.0/`;
+- **Zabbix 8.0**: testada com sucesso no **Zabbix 8.0 Beta 2** e mantida em `templates/zabbix-8.0/`.
 
-Arquivo do template:
+A compatibilidade da linha 8.0 será revalidada e a documentação atualizada conforme novas versões Beta, RC e a versão final forem testadas.
+
+Arquivos dos templates:
 
 ```text
 templates/zabbix-7.0/advanced-icmp-ping-with-jitter.yaml
+templates/zabbix-8.0/advanced-icmp-ping-with-jitter.yaml
 ```
 
-O coletor Python é compartilhado pelo projeto:
+Detalhes específicos da validação 8.0:
+
+```text
+docs/pt-BR/zabbix-8.0.md
+```
+
+O coletor Python é compartilhado pelas versões:
 
 ```text
 advanced_icmp_ping.py
@@ -96,7 +106,7 @@ Jitter e desvio padrão são métricas complementares:
 
 ## Requisitos
 
-- Zabbix Server ou Zabbix Proxy 7.0;
+- Zabbix Server ou Zabbix Proxy 7.0, ou Zabbix 8.0 Beta 2 para o export 8.0 atualmente validado;
 - Python 3 disponível no servidor/proxy que executará o external check;
 - `fping` instalado;
 - diretório `ExternalScripts` configurado ou utilizando o caminho padrão da instalação;
@@ -170,16 +180,17 @@ Quando existe uma falha de coleta, o script ainda deve retornar JSON válido. Ex
 
 O template possui um trigger específico para sinalizar erros do coletor.
 
-## Importação do template no Zabbix 7.0
+## Importação do template
 
 No frontend do Zabbix:
 
 1. acesse `Data collection` > `Templates`;
 2. clique em `Import`;
-3. selecione:
+3. selecione o arquivo correspondente à sua versão principal:
 
 ```text
 templates/zabbix-7.0/advanced-icmp-ping-with-jitter.yaml
+templates/zabbix-8.0/advanced-icmp-ping-with-jitter.yaml
 ```
 
 4. revise as regras de importação;
@@ -432,7 +443,7 @@ Consulte o arquivo `LICENSE` na raiz do repositório para o texto completo da li
 
 ## Versionamento atual
 
-O template Zabbix 7.0 possui atualmente:
+Os exports Zabbix 7.0 e 8.0 preservam atualmente:
 
 ```yaml
 vendor:
@@ -442,16 +453,9 @@ vendor:
 
 O coletor Python possui versionamento próprio no cabeçalho do script.
 
-Enquanto o projeto estiver nesta linha de compatibilidade, alterações específicas do template Zabbix 7.0 devem permanecer em:
+Alterações específicas de formato ou compatibilidade devem permanecer no diretório correspondente à versão principal do Zabbix:
 
 ```text
 templates/zabbix-7.0/
-```
-
-Quando existir uma versão específica para outra linha principal do Zabbix, ela deverá receber seu próprio diretório, por exemplo:
-
-```text
 templates/zabbix-8.0/
 ```
-
-Isso evita misturar exports de versões diferentes e torna a compatibilidade explícita na estrutura do repositório.
