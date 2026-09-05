@@ -6,7 +6,9 @@ O projeto possui um export específico para Zabbix 8.0 em:
 templates/zabbix-8.0/advanced-icmp-ping-with-jitter.yaml
 ```
 
-Esse arquivo foi obtido a partir de um template importado com sucesso no Zabbix 8.0 e posteriormente exportado pelo próprio frontend.
+Esse arquivo foi obtido a partir de um template importado com sucesso no **Zabbix 8.0 Beta 2** e posteriormente exportado pelo próprio frontend.
+
+> **Status de compatibilidade:** testado e validado no Zabbix 8.0 Beta 2. Esta documentação e o export serão revisados e atualizados conforme novas versões Beta, RC e a versão final do Zabbix 8.0 forem testadas.
 
 ## Validação
 
@@ -41,6 +43,12 @@ No frontend do Zabbix 8.0:
 6. vincule o template aos hosts desejados.
 
 O coletor Python é o mesmo utilizado pela versão 7.0 e deve estar instalado no diretório `ExternalScripts` do Zabbix Server ou Proxy.
+
+## Política de atualização da compatibilidade 8.0
+
+Enquanto o Zabbix 8.0 estiver em desenvolvimento, o diretório `templates/zabbix-8.0/` representará a versão mais recente efetivamente testada pelo projeto.
+
+Após cada validação relevante (Beta, RC ou versão final), a documentação deverá registrar explicitamente a versão testada. Caso o novo Zabbix gere alterações no formato de export ou exija ajustes no template, o YAML será atualizado a partir de um novo export validado.
 
 ## Referência oficial
 
