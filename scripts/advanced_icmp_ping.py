@@ -9,7 +9,8 @@ Original project: https://github.com/priechodsky/AdvancedPING
 License: GNU General Public License v3.0 (GPL-3.0)
 
 Description:
-    External script for Zabbix 7.0 templates.
+    External script for the Zabbix 7.0 and 8.0 template exports maintained by
+    this project.
 
     The script runs a single fping batch using "-C" so every ICMP reply time
     is available as an individual RTT sample. It then returns a compact JSON
@@ -47,18 +48,23 @@ def fail(message):
     object. Returning a stable error payload prevents malformed output from
     breaking every dependent item in a noisy way.
     """
-    print(json.dumps({
-        "error": message,
-        "xmt": 0,
-        "rcv": 0,
-        "loss": 100,
-        "min": 0,
-        "avg": 0,
-        "max": 0,
-        "jitter": 0,
-        "stddev": 0,
-        "rtts": []
-    }, separators=(",", ":")))
+    print(
+        json.dumps(
+            {
+                "error": message,
+                "xmt": 0,
+                "rcv": 0,
+                "loss": 100,
+                "min": 0,
+                "avg": 0,
+                "max": 0,
+                "jitter": 0,
+                "stddev": 0,
+                "rtts": [],
+            },
+            separators=(",", ":"),
+        )
+    )
     sys.exit(0)
 
 
@@ -180,7 +186,7 @@ def stats(samples):
             "max": 0,
             "jitter": 0,
             "stddev": 0,
-            "rtts": []
+            "rtts": [],
         }
 
     avg = sum(received) / rcv
@@ -198,7 +204,7 @@ def stats(samples):
         "max": rounded(max(received)),
         "jitter": rounded(jitter),
         "stddev": rounded(math.sqrt(variance)),
-        "rtts": [rounded(sample) for sample in received]
+        "rtts": [rounded(sample) for sample in received],
     }
 
 
@@ -220,10 +226,13 @@ def main():
     command = [
         "fping",
         "-q",
-        "-C", str(count),
-        "-p", str(interval_ms),
-        "-t", str(timeout_ms),
-        host
+        "-C",
+        str(count),
+        "-p",
+        str(interval_ms),
+        "-t",
+        str(timeout_ms),
+        host,
     ]
 
     try:
@@ -234,7 +243,7 @@ def main():
             check=False,
             capture_output=True,
             text=True,
-            timeout=((count * interval_ms) + timeout_ms + 5000) / 1000
+            timeout=((count * interval_ms) + timeout_ms + 5000) / 1000,
         )
     except FileNotFoundError:
         fail("fping command not found")

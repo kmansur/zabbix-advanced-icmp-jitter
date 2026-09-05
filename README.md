@@ -1,134 +1,51 @@
 # Advanced ICMP Ping with Jitter
 
+[![CI](https://github.com/kmansur/zabbix-advanced-icmp-jitter/actions/workflows/ci.yml/badge.svg)](https://github.com/kmansur/zabbix-advanced-icmp-jitter/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/kmansur/zabbix-advanced-icmp-jitter/actions/workflows/security.yml/badge.svg)](https://github.com/kmansur/zabbix-advanced-icmp-jitter/actions/workflows/security.yml)
+
 [Português (Brasil)](docs/pt-BR/README.md)
 
-Zabbix template for monitoring ICMP latency, packet loss, jitter, and RTT
-standard deviation using `fping` and a Python external script.
-
-This template is designed for network devices, links, servers, gateways, and
-any host where ICMP reachability and latency stability matter.
+Zabbix template for advanced ICMP monitoring with latency, packet loss, jitter, and RTT standard deviation. A single Python external check runs `fping`, returns JSON, and feeds dependent Zabbix items from the same probe batch.
 
 ## Compatibility
 
-Version-specific exports are stored under `templates/`:
+| Zabbix | Template | Status |
+| --- | --- | --- |
+| 7.0 | `templates/zabbix-7.0/advanced-icmp-ping-with-jitter.yaml` | Supported |
+| 8.0 | `templates/zabbix-8.0/advanced-icmp-ping-with-jitter.yaml` | Tested on **Zabbix 8.0 Beta 2**; revalidated as new Beta/RC/final builds are tested |
+
+The Zabbix 8.0 compatibility notes are documented in [docs/pt-BR/zabbix-8.0.md](docs/pt-BR/zabbix-8.0.md).
+
+## Metrics
+
+The template collects one ICMP batch and derives:
+
+- average, minimum, and maximum RTT;
+- packet loss;
+- transmitted and received packet counts;
+- jitter based on consecutive received RTT differences;
+- population RTT standard deviation;
+- collector error state;
+- raw JSON for troubleshooting.
+
+## Repository layout
 
 ```text
+.github/                 GitHub workflows, Dependabot, PR and issue templates
+docs/
+├── images/              Documentation images
+└── pt-BR/               Brazilian Portuguese documentation
+scripts/                 Production Zabbix external collector
 templates/
-├── zabbix-7.0/
-│   └── advanced-icmp-ping-with-jitter.yaml
-└── zabbix-8.0/
-    └── advanced-icmp-ping-with-jitter.yaml
+├── zabbix-7.0/          Zabbix 7.0 export
+└── zabbix-8.0/          Zabbix 8.0 export
+tests/                   Unit tests and fping fixtures
+tools/                   Repository and template validation tools
 ```
 
-Current validation status:
+## Quick start
 
-- **Zabbix 7.0** - supported export.
-- **Zabbix 8.0** - tested successfully with **Zabbix 8.0 Beta 2**.
-
-The Zabbix 8.0 export and compatibility notes will be reviewed and updated as
-new Beta, RC, and final Zabbix 8.0 releases are tested. See
-[`docs/pt-BR/zabbix-8.0.md`](docs/pt-BR/zabbix-8.0.md) for the current validation
-notes.
-
-## What This Template Measures
-
-The template collects one ICMP probe batch and derives all metrics from the same
-sample window. This avoids running multiple ping commands for the same host and
-keeps the data internally consistent.
-
-Collected metrics:
-
-- Average ICMP response time.
-- Minimum ICMP response time.
-- Maximum ICMP response time.
-- Packet loss percentage.
-- Transmitted packet count.
-- Received packet count.
-- ICMP jitter.
-- RTT standard deviation.
-- Collector error state.
-- Raw JSON output for troubleshooting.
-
-## How It Works
-
-The Zabbix template has one master external item:
-
-```text
-advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
-```
-
-The script runs:
-
-```sh
-fping -q -C <count> -p <interval_ms> -t <timeout_ms> <host>
-```
-
-`fping -C` returns one RTT value per transmitted ICMP packet. The script parses
-those RTT samples and returns JSON. All Zabbix metrics are dependent items that
-use JSONPath preprocessing.
-
-This design gives two useful benefits:
-
-- One ICMP batch per update interval.
-- All latency, loss, jitter, and deviation values come from the same packet set.
-
-## Jitter Calculation
-
-Jitter is calculated as the average absolute difference between consecutive
-received RTT samples:
-
-```text
-jitter = average(abs(current_rtt - previous_rtt))
-```
-
-Example:
-
-```text
-RTTs:        10.0, 13.0, 11.0, 20.0
-Differences:  3.0,  2.0,  9.0
-Jitter:       4.667 ms
-```
-
-This is more precise than estimating jitter as `max - min`, because it measures
-packet-to-packet variation inside the sample window.
-
-Lost packets are not used as RTT values because there is no response time to
-measure. They are still counted in `xmt`, `rcv`, and `loss`.
-
-## Standard Deviation
-
-RTT standard deviation measures how spread out the received RTT samples are
-around their average.
-
-Practical interpretation:
-
-- Low `stddev`: latency is stable.
-- High `stddev`: latency is irregular, even if the average looks acceptable.
-
-Jitter and standard deviation are complementary:
-
-- `jitter` shows packet-to-packet variation.
-- `stddev` shows overall RTT dispersion during the batch.
-
-## Files
-
-- `templates/zabbix-7.0/advanced-icmp-ping-with-jitter.yaml` - Zabbix 7.0 template export.
-- `templates/zabbix-8.0/advanced-icmp-ping-with-jitter.yaml` - Zabbix 8.0 export, currently tested with Zabbix 8.0 Beta 2.
-- `advanced_icmp_ping.py` - Python external script used by the template.
-- `advanced_icmp_ping.png` - example graph generated by the template.
-- `docs/pt-BR/README.md` - Brazilian Portuguese documentation.
-- `docs/pt-BR/zabbix-8.0.md` - Zabbix 8.0 validation notes in Brazilian Portuguese.
-- `LICENSE` - GNU General Public License v3.0.
-
-## Requirements
-
-- Zabbix 7.0, or Zabbix 8.0 Beta 2 for the currently validated 8.0 export.
-- External scripts enabled in the Zabbix server/proxy configuration.
-- Python 3.6 or newer.
-- `fping` installed.
-- The Zabbix server/proxy user must be able to execute `fping`.
-
-## Install Dependencies
+Install the collector dependencies on the Zabbix Server or Proxy.
 
 Debian/Ubuntu:
 
@@ -137,344 +54,65 @@ apt update
 apt install python3 fping
 ```
 
-RHEL/Rocky/AlmaLinux:
+Install the collector in the Zabbix external scripts directory:
 
 ```sh
-dnf install python3 fping
-```
-
-FreeBSD:
-
-```sh
-pkg install python3 fping
-```
-
-## Install The External Script
-
-Copy the collector to the Zabbix external scripts directory:
-
-```sh
-cp advanced_icmp_ping.py /usr/lib/zabbix/externalscripts/
+cp scripts/advanced_icmp_ping.py /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py
 chmod +x /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py
 ```
 
-If your Zabbix installation uses another external scripts directory, check:
-
-```sh
-grep -i '^ExternalScripts' /etc/zabbix/zabbix_server.conf
-grep -i '^ExternalScripts' /etc/zabbix/zabbix_proxy.conf
-```
-
-If the parameter is commented out, Zabbix uses its compiled default. Common
-paths include:
-
-```text
-/usr/lib/zabbix/externalscripts
-/usr/local/share/zabbix/externalscripts
-```
-
-## Test The Collector Manually
-
-Run the script as the Zabbix user whenever possible:
+Test it as the Zabbix user:
 
 ```sh
 sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 8.8.8.8 20 100 1000
 ```
 
-Expected output format:
+Then import the YAML that matches the target Zabbix major/minor version.
 
-```json
-{"error":"","xmt":20,"rcv":20,"loss":0.0,"min":10.1,"avg":12.65,"max":16.3,"jitter":1.678,"stddev":1.887,"rtts":[11.9,11.3],"target":"8.8.8.8"}
-```
+## Documentation
 
-The `rtts` array in real output will contain all received RTT samples. It is
-kept mainly for troubleshooting and visibility in the raw JSON item. The raw
-JSON item is not shown on the default dashboard because the payload can be long;
-open the item history directly when you need to inspect collector details.
+Brazilian Portuguese:
 
-If there is a collector problem, the script still returns valid JSON:
+- [Overview](docs/pt-BR/README.md)
+- [Installation](docs/pt-BR/installation.md)
+- [Configuration and macros](docs/pt-BR/configuration.md)
+- [Metrics and dashboard](docs/pt-BR/metrics.md)
+- [Triggers](docs/pt-BR/triggers.md)
+- [Tuning](docs/pt-BR/tuning.md)
+- [Troubleshooting](docs/pt-BR/troubleshooting.md)
+- [Zabbix 8.0 compatibility](docs/pt-BR/zabbix-8.0.md)
+- [Versioning](docs/pt-BR/versioning.md)
 
-```json
-{"error":"fping command not found","xmt":0,"rcv":0,"loss":100,"min":0,"avg":0,"max":0,"jitter":0,"stddev":0,"rtts":[]}
-```
+## Development
 
-The template includes a trigger for this condition.
-
-## Import The Template
-
-1. Open the Zabbix frontend.
-2. Go to `Data collection` -> `Templates`.
-3. Click `Import`.
-4. Select the export matching your Zabbix major version:
-   - `templates/zabbix-7.0/advanced-icmp-ping-with-jitter.yaml`
-   - `templates/zabbix-8.0/advanced-icmp-ping-with-jitter.yaml`
-5. Review import rules.
-6. Import the template.
-7. Link it to the desired hosts.
-
-The template uses `{HOST.CONN}` as the target. Make sure the linked host has a
-valid interface address or DNS name.
-
-## Supported Target Formats
-
-The collector supports targets accepted by `fping`, including:
-
-- IPv4 addresses, such as `8.8.8.8`.
-- DNS names, such as `example.com`.
-- IPv6 addresses, such as `2001:4860:4860::8888`, when IPv6 routing and `fping`
-  IPv6 support are available on the Zabbix server or proxy.
-
-Manual IPv6 test:
+Install development dependencies:
 
 ```sh
-sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 2001:4860:4860::8888 20 100 1000
+python -m pip install -r requirements-dev.txt
 ```
 
-If the host uses DNS, remember that `{HOST.CONN}` depends on the selected
-interface connection mode in Zabbix. Confirm that the resolved target is the one
-you expect.
-
-## Default Macros
-
-| Macro | Default | Meaning |
-| --- | ---: | --- |
-| `{$ADV_FPING_POOL_COUNT}` | `20` | Number of ICMP probes per batch. |
-| `{$ADV_FPING_INTERVAL_MS}` | `100` | Delay between probes in milliseconds. |
-| `{$ADV_FPING_TIMEOUT_MS}` | `1000` | Timeout per probe in milliseconds. |
-| `{$ADV_ICMP_LOSS_WARN}` | `20` | Packet loss warning threshold in percent. |
-| `{$ADV_ICMP_JITTER_WARN}` | `20` | Jitter warning threshold in milliseconds. |
-| `{$ADV_ICMP_RESPONSE_TIME_WARN}` | `200` | Average latency warning threshold in milliseconds. |
-| `{$ADV_ICMP_MAX_TIME_MULTIPLE}` | `30` | Warning threshold for max/min latency ratio. |
-| `{$ADV_ICMP_STDDEV_WARN}` | `30` | RTT standard deviation threshold in milliseconds. |
-
-The default collector settings send 20 probes spaced 100 ms apart. This gives a
-measurement window of about 2 seconds and provides a good balance between jitter
-precision and collection time.
-
-## Tuning Recommendations
-
-General WAN monitoring:
-
-```text
-{$ADV_FPING_POOL_COUNT}=20
-{$ADV_FPING_INTERVAL_MS}=100
-{$ADV_FPING_TIMEOUT_MS}=1000
-{$ADV_ICMP_JITTER_WARN}=20
-```
-
-Low-latency LAN or datacenter monitoring:
-
-```text
-{$ADV_FPING_POOL_COUNT}=20
-{$ADV_FPING_INTERVAL_MS}=50
-{$ADV_ICMP_JITTER_WARN}=5
-{$ADV_ICMP_STDDEV_WARN}=10
-```
-
-Internet links or higher-latency paths:
-
-```text
-{$ADV_FPING_POOL_COUNT}=20
-{$ADV_FPING_INTERVAL_MS}=100
-{$ADV_ICMP_JITTER_WARN}=30
-{$ADV_ICMP_STDDEV_WARN}=50
-```
-
-Sensitive VoIP/video paths:
-
-```text
-{$ADV_FPING_POOL_COUNT}=30
-{$ADV_FPING_INTERVAL_MS}=50
-{$ADV_ICMP_JITTER_WARN}=20
-{$ADV_ICMP_STDDEV_WARN}=30
-```
-
-Higher probe counts improve jitter confidence, but also increase collection
-duration. A rough estimate is:
-
-```text
-duration ~= pool_count * interval_ms
-```
-
-For example:
-
-```text
-20 probes * 100 ms = about 2 seconds
-30 probes * 50 ms  = about 1.5 seconds
-```
-
-## Items
-
-| Item | Key | Type |
-| --- | --- | --- |
-| Advanced ICMP: raw JSON results | `advanced_icmp_ping.py[...]` | External |
-| Advanced ICMP: average response time | `advanced.ping.avg` | Dependent |
-| Advanced ICMP: minimum response time | `advanced.ping.min` | Dependent |
-| Advanced ICMP: maximum response time | `advanced.ping.max` | Dependent |
-| Advanced ICMP: packet loss | `advanced.ping.loss` | Dependent |
-| Advanced ICMP: packets sent | `advanced.ping.xmt` | Dependent |
-| Advanced ICMP: packets received | `advanced.ping.rcv` | Dependent |
-| Advanced ICMP: jitter | `advanced.ping.jitter` | Dependent |
-| Advanced ICMP: RTT standard deviation | `advanced.ping.stddev` | Dependent |
-| Advanced ICMP: collector error | `advanced.ping.error` | Dependent |
-
-## Triggers
-
-Enabled by default:
-
-- `Advanced ICMP: Unavailable by ICMP ping`
-- `Advanced ICMP: Long unavailable by ICMP ping`
-- `Advanced ICMP: High packet loss`
-- `Advanced ICMP: High response time`
-- `Advanced ICMP: High jitter`
-- `Advanced ICMP: High time differences (Min/Max)`
-- `Advanced ICMP: Collector error`
-
-Disabled by default:
-
-- `Advanced ICMP: High RTT standard deviation`
-
-The unavailable trigger is a short outage signal. It enters problem state only
-when no ICMP replies are received during the last 3 collected batches:
-
-```text
-max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
-```
-
-The long unavailable trigger is an escalation signal. It enters problem state
-only when no ICMP replies are received during the last 30 collected batches:
-
-```text
-max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0
-```
-
-`Advanced ICMP: Unavailable by ICMP ping` depends on
-`Advanced ICMP: Long unavailable by ICMP ping`. This keeps the short outage alert
-from being shown together with the long outage alert when the issue escalates.
-
-Both unavailable triggers recover automatically when the host starts answering
-again. No separate recovery expression is required because the problem
-expression becomes false as soon as `rcv` is greater than `0` inside the
-evaluated window.
-
-The standard deviation trigger is disabled by default because not every network
-needs alerting on dispersion. Enable it for links where latency stability is
-important.
-
-## Dashboard
-
-The template includes one default dashboard with the graph
-`Advanced ICMP: latency, loss, jitter and deviation`.
-
-The raw JSON item is intentionally not displayed on the dashboard. It remains in
-the template for troubleshooting, but the dashboard focuses on visual metrics
-that are easier to read during routine monitoring.
-
-The classic graph uses a fixed `0-200` Y-axis range. This keeps graphs visually
-comparable across hosts and prevents common WAN latency peaks from being clipped.
-Because classic Zabbix graphs use a single fixed range for both left and right
-axes, packet loss remains a percentage series while latency, jitter, and
-deviation use the right-side millisecond scale.
-
-Example graph layout:
-
-![Advanced ICMP Ping with Jitter graph](advanced_icmp_ping.png)
-
-The screenshot is an example of the graph layout. In version `1.0-7`, the graph
-uses a fixed `0-200` Y-axis range.
-
-## Troubleshooting
-
-### Zabbix item says the script cannot be found
-
-Check that the script is in the external scripts directory and executable:
+Run the same checks used by CI:
 
 ```sh
-ls -l /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py
+python -m compileall -q scripts tools tests
+ruff check scripts tools tests
+ruff format --check scripts tools tests
+pytest -q
+python tools/validate_templates.py
 ```
 
-### Collector error: `fping command not found`
-
-Install `fping` and confirm it is in the Zabbix user's `PATH`:
-
-```sh
-which fping
-sudo -u zabbix fping -v
-```
-
-### Collector error: `unable to parse fping output`
-
-Run the script manually and inspect the raw behavior:
-
-```sh
-sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 8.8.8.8 20 100 1000
-```
-
-Also confirm that `fping -q -C` works on the system:
-
-```sh
-sudo -u zabbix fping -q -C 5 -p 100 -t 1000 8.8.8.8
-```
-
-### All packets are lost
-
-Check firewall policy, routing, and ICMP filtering. Some hosts deprioritize or
-block ICMP while still serving TCP/UDP traffic.
-
-### Collection is too slow
-
-Reduce the probe count or interval:
-
-```text
-{$ADV_FPING_POOL_COUNT}=10
-{$ADV_FPING_INTERVAL_MS}=100
-```
-
-Do not set the interval too low on busy Zabbix servers monitoring many hosts.
-
-### Jitter looks too noisy
-
-Increase the probe count:
-
-```text
-{$ADV_FPING_POOL_COUNT}=30
-```
-
-Use trigger windows such as `avg(...,5m)` instead of `last()` for jitter alerts.
-The template already uses a 5-minute average for jitter.
-
-## License and Attribution
-
-This project is based on `AdvancedPING` by Dusan Priechodsky:
-
-https://github.com/priechodsky/AdvancedPING
-
-The original project is licensed under the GNU General Public License v3.0
-GPL-3.0. This modified version is also released under GPL-3.0.
-
-Modified by Karim Mansur / Net Tech.
-
-See `LICENSE` for the full GPL-3.0 license text.
-
-This template is distributed independently and is not submitted to the official
-Zabbix Community Templates repository because it is a GPL-3.0 derivative of
-`AdvancedPING`. The official Zabbix Community Templates repository currently
-requires MIT licensing for contributed templates and additional files.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development and Zabbix export workflow.
 
 ## Versioning
 
-Template vendor:
+The current tested template version remains `1.0-10` to preserve the existing exports during repository-only reorganization. The next functional release will transition to Semantic Versioning (`MAJOR.MINOR.PATCH`).
 
-```yaml
-vendor:
-  name: 'Net Tech'
-  version: 1.0-10
-```
+The release workflow requires `VERSION`, the Zabbix `vendor.version`, the Git tag, and the GitHub Release version to agree.
 
-Collector script:
+## License and attribution
 
-```text
-advanced_icmp_ping.py version 1.0.5
-```
+This project is based on `AdvancedPING` by Dusan Priechodsky and is distributed under the GNU General Public License v3.0 (GPL-3.0).
 
-Every functional template change should increment `vendor.version`.
+See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
+
+Maintained modifications: Karim Mansur / Net Tech.
