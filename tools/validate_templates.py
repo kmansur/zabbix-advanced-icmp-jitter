@@ -89,15 +89,11 @@ def template_signature(data):
     items = {
         item["key"]: (item["uuid"], item.get("type", "")) for item in template.get("items", [])
     }
-    macros = {
-        macro["macro"]: str(macro.get("value", "")) for macro in template.get("macros", [])
-    }
+    macros = {macro["macro"]: str(macro.get("value", "")) for macro in template.get("macros", [])}
     dashboards = {
         dashboard["name"]: dashboard["uuid"] for dashboard in template.get("dashboards", [])
     }
-    graphs = {
-        graph["name"]: graph["uuid"] for graph in data["zabbix_export"].get("graphs", [])
-    }
+    graphs = {graph["name"]: graph["uuid"] for graph in data["zabbix_export"].get("graphs", [])}
 
     return {
         "uuid": template.get("uuid"),
