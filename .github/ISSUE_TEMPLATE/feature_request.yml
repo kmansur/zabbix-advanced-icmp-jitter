@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an improvement to monitoring, templates, documentation, or tooling.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What monitoring or operational problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior, metric, trigger, or workflow.
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Collector Python
+        - Zabbix 7.0 template
+        - Zabbix 8.0 template
+        - Documentation
+        - CI / tooling
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility considerations
+      description: Note any Zabbix version, OS, fping, IPv4, or IPv6 constraints.
