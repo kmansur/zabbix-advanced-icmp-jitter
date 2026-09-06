@@ -302,6 +302,7 @@ zabbix_export:
       type: EXTERNAL
       key: 
         advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+      delay: 1m
       history: 1h
       value_type: TEXT
       timeout: 30s

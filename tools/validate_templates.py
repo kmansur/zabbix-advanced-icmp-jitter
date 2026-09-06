@@ -270,6 +270,8 @@ def validate_external_script(exports):
             fail(f"Zabbix {version}: raw master item history must be 1h")
         if str(item.get("timeout", "")) != "30s":
             fail(f"Zabbix {version}: external master item timeout must remain 30s")
+        if str(item.get("delay", "")) != "1m":
+            fail(f"Zabbix {version}: external master item update interval must remain 1m")
 
         tags = set(normalize_tags(item.get("tags", [])))
         required = {("component", "network"), ("component", "raw")}

@@ -28,13 +28,20 @@ advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTER
 
 Os parâmetros são posicionais porque o Zabbix passa as macros diretamente para o script externo.
 
+O External check mestre possui intervalo de atualização explícito de `1m`. Portanto, as janelas dos triggers baseadas em quantidade de coletas correspondem aproximadamente a:
+
+```text
+#3  = aproximadamente 3 minutos
+#30 = aproximadamente 30 minutos
+```
+
 ## Macros padrão
 
 | Macro | Padrão | Finalidade |
 | --- | ---: | --- |
 | `{$ADV_FPING_POOL_COUNT}` | `20` | Quantidade de sondagens ICMP por lote. |
-| `{$ADV_FPING_INTERVAL_MS}` | `100` | Intervalo entre sondagens, em milissegundos. |
-| `{$ADV_FPING_TIMEOUT_MS}` | `1000` | Timeout de cada sondagem, em milissegundos. |
+| `{$ADV_FPING_INTERVAL_MS}` | `250` | Intervalo entre sondagens, em milissegundos. |
+| `{$ADV_FPING_TIMEOUT_MS}` | `250` | Timeout de cada sondagem, em milissegundos. |
 | `{$ADV_ICMP_LOSS_WARN}` | `20` | Limite de alerta de perda de pacotes, em %. |
 | `{$ADV_ICMP_JITTER_WARN}` | `20` | Limite de alerta de jitter, em ms. |
 | `{$ADV_ICMP_RESPONSE_TIME_WARN}` | `200` | Limite de alerta para latência média, em ms. |
@@ -62,7 +69,7 @@ duração ~= quantidade_de_pacotes * intervalo_ms
 Exemplo padrão:
 
 ```text
-20 pacotes * 100 ms = aproximadamente 2 segundos
+20 pacotes * 250 ms = aproximadamente 5 segundos
 ```
 
 O timeout do processo Python é calculado com margem adicional para evitar que um `fping` travado ocupe indefinidamente um poller do Zabbix.

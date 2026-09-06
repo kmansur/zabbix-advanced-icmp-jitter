@@ -20,23 +20,23 @@ The standard deviation trigger is disabled by default because not every network 
 
 ## Short unavailability
 
-The problem is raised when no ICMP replies are received during the last 3 batches:
+The problem is raised when no ICMP replies are received during the last 3 batches. With the explicit `1m` master-item interval, this is approximately 3 minutes:
 
 ```text
 max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
 ```
 
-Default severity: `HIGH`.
+Default severity: `AVERAGE`.
 
 ## Long unavailability
 
-The escalation condition requires 30 consecutive batches without a reply:
+The escalation condition requires 30 consecutive batches without a reply. With the explicit `1m` master-item interval, this is approximately 30 minutes:
 
 ```text
 max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0
 ```
 
-Default severity: `DISASTER`.
+Default severity: `HIGH`.
 
 The short outage trigger depends on the long outage trigger. When the outage grows into the long condition, that dependency avoids two visible problems representing the same failure.
 
@@ -45,7 +45,7 @@ Both triggers recover automatically when the expression becomes false and replie
 ## Packet loss
 
 ```text
-last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
 ```
 
 The threshold is controlled by `{$ADV_ICMP_LOSS_WARN}`.

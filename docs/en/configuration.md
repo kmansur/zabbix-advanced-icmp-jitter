@@ -28,13 +28,20 @@ advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTER
 
 Parameters are positional because Zabbix passes macro values directly to the external script.
 
+The master External check has an explicit update interval of `1m`. Therefore, count-based trigger windows map approximately to wall-clock time as follows:
+
+```text
+#3  = approximately 3 minutes
+#30 = approximately 30 minutes
+```
+
 ## Default macros
 
 | Macro | Default | Purpose |
 | --- | ---: | --- |
 | `{$ADV_FPING_POOL_COUNT}` | `20` | Number of ICMP probes per batch. |
-| `{$ADV_FPING_INTERVAL_MS}` | `100` | Interval between probes, in milliseconds. |
-| `{$ADV_FPING_TIMEOUT_MS}` | `1000` | Per-probe timeout, in milliseconds. |
+| `{$ADV_FPING_INTERVAL_MS}` | `250` | Interval between probes, in milliseconds. |
+| `{$ADV_FPING_TIMEOUT_MS}` | `250` | Per-probe timeout, in milliseconds. |
 | `{$ADV_ICMP_LOSS_WARN}` | `20` | Packet loss warning threshold, in %. |
 | `{$ADV_ICMP_JITTER_WARN}` | `20` | Jitter warning threshold, in ms. |
 | `{$ADV_ICMP_RESPONSE_TIME_WARN}` | `200` | Average latency warning threshold, in ms. |
@@ -62,7 +69,7 @@ duration ~= packet_count * interval_ms
 Default example:
 
 ```text
-20 packets * 100 ms = approximately 2 seconds
+20 packets * 250 ms = approximately 5 seconds
 ```
 
 The Python process timeout includes additional margin so a stuck `fping` process does not occupy a Zabbix poller indefinitely.

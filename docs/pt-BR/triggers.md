@@ -20,23 +20,23 @@ O trigger de desvio padrão fica desativado por padrão porque nem toda rede pre
 
 ## Indisponibilidade curta
 
-O problema ocorre quando nenhuma resposta ICMP é recebida durante os últimos 3 lotes:
+O problema ocorre quando nenhuma resposta ICMP é recebida durante os últimos 3 lotes. Com o intervalo explícito de `1m` no item mestre, isso representa aproximadamente 3 minutos:
 
 ```text
 max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
 ```
 
-Prioridade padrão: `HIGH`.
+Prioridade padrão: `AVERAGE`.
 
 ## Indisponibilidade prolongada
 
-A escalada de indisponibilidade exige 30 lotes consecutivos sem resposta:
+A escalada de indisponibilidade exige 30 lotes consecutivos sem resposta. Com o intervalo explícito de `1m` no item mestre, isso representa aproximadamente 30 minutos:
 
 ```text
 max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0
 ```
 
-Prioridade padrão: `DISASTER`.
+Prioridade padrão: `HIGH`.
 
 O trigger curto depende do trigger prolongado. Quando a indisponibilidade evolui para a condição longa, essa dependência evita dois problemas visíveis representando a mesma falha.
 
@@ -45,7 +45,7 @@ Ambos recuperam automaticamente quando a expressão volta a ser falsa e novas re
 ## Perda de pacotes
 
 ```text
-last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
 ```
 
 O limite é controlado por `{$ADV_ICMP_LOSS_WARN}`.
