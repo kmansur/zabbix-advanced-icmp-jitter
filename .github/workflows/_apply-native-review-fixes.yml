@@ -27,6 +27,9 @@ jobs:
       - name: Apply reviewed changes
         run: |
           python tools/_apply_native_review_fixes.py
+          # Zabbix 7.0 serializes delay: '0' on dependent items while 8.0 omits it.
+          # Delay is not a semantic cross-version invariant for dependent items.
+          sed -i '/"delay": str(item.get("delay", "")),/d' tools/validate_templates.py
           # Workflow files cannot be pushed by the Actions token. The release
           # workflow is updated separately through the repository API.
           git checkout -- .github/workflows/release.yml
