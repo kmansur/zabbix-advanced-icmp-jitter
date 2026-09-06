@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Validate English and Brazilian Portuguese documentation parity."""
+"""Validate bilingual documentation parity and local Markdown links."""
 
+import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS_EN = ROOT / "docs" / "en"
 DOCS_PTBR = ROOT / "docs" / "pt-BR"
+LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 
 ROOT_PAIRS = {
     "README.md": "README.pt-BR.md",
@@ -57,10 +60,54 @@ def validate_docs_parity():
             fail(f"docs/pt-BR/{name} has no link to its English counterpart")
 
 
+def markdown_files():
+    files = list(ROOT.glob("*.md"))
+    files.extend((ROOT / "docs").rglob("*.md"))
+    return sorted(path for path in files if path.is_file())
+
+
+def local_link_target(source, destination):
+    destination = destination.strip()
+    if destination.startswith("<") and destination.endswith(">"):
+        destination = destination[1:-1]
+    destination = destination.split(maxsplit=1)[0]
+
+    parsed = urlparse(destination)
+    if parsed.scheme or parsed.netloc or destination.startswith("#"):
+        return None
+
+    relative_path = unquote(parsed.path)
+    if not relative_path:
+        return None
+
+    return (source.parent / relative_path).resolve()
+
+
+def validate_local_links():
+    for source in markdown_files():
+        text = source.read_text(encoding="utf-8")
+        for match in LINK_RE.finditer(text):
+            destination = match.group(1)
+            target = local_link_target(source, destination)
+            if target is None:
+                continue
+            if not target.is_relative_to(ROOT):
+                fail(
+                    f"{source.relative_to(ROOT)} links outside the repository: "
+                    f"{destination!r}"
+                )
+            if not target.exists():
+                fail(
+                    f"broken local link in {source.relative_to(ROOT)}: "
+                    f"{destination!r}"
+                )
+
+
 def main():
     validate_root_pairs()
     validate_docs_parity()
-    print("OK: English and Brazilian Portuguese documentation are mirrored")
+    validate_local_links()
+    print("OK: bilingual documentation parity and local links validated")
 
 
 if __name__ == "__main__":
