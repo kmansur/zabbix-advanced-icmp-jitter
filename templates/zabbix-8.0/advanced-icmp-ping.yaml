@@ -16,7 +16,7 @@ zabbix_export:
       dedicated ICMP pinger processes instead of starting a Python external check per host.
 
       Use Advanced ICMP Ping with Jitter only on selected paths that require jitter and
-      RTT standard-deviation analysis.
+      RTT standard-deviation analysis from the same packet batch.
     vendor:
       name: 'Net Tech'
       version: 1.1.0
@@ -41,7 +41,6 @@ zabbix_export:
       - uuid: c1298c34e363455aa5bc9b00c0c2d746
         expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=30 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=0'
         name: 'Advanced ICMP: Long unavailable by ICMP ping'
-        opdata: 'Current state: {ITEM.LASTVALUE1}'
         priority: HIGH
         description: 'Thirty consecutive one-minute ICMP batches failed (approximately 30 minutes).'
         tags:
@@ -50,7 +49,6 @@ zabbix_export:
       - uuid: 76fe29e0d3734253a163fce4611f9ce6
         expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=3 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=0 and (count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)<30 or max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)>0)'
         name: 'Advanced ICMP: Unavailable by ICMP ping'
-        opdata: 'Current state: {ITEM.LASTVALUE1}'
         priority: AVERAGE
         description: 'Three consecutive one-minute ICMP batches failed (approximately 3 minutes). This event is mutually exclusive with the long-unavailable event.'
         tags:
@@ -72,16 +70,10 @@ zabbix_export:
         value: network
       triggers:
       - uuid: 4eb17eeb4ee647f59c23a5b842aea054
-        expression: 'min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)<100'
+        expression: 'min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)<100'
         name: 'Advanced ICMP: High packet loss'
-        opdata: 'Loss: {ITEM.LASTVALUE1} %'
         priority: WARNING
-        description: 'Degraded connectivity with packet loss above the configured threshold. Complete loss is handled by the availability triggers.'
-        dependencies:
-        - name: 'Advanced ICMP: Unavailable by ICMP ping'
-          expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=3 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=0 and (count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)<30 or max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)>0)'
-        - name: 'Advanced ICMP: Long unavailable by ICMP ping'
-          expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=30 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=0'
+        description: 'Packet loss stayed above the configured threshold for two consecutive batches. Any batch with complete loss is handled by the availability triggers instead.'
         tags:
         - tag: scope
           value: availability
@@ -107,56 +99,15 @@ zabbix_export:
         value: performance
       triggers:
       - uuid: 91fece0752404939af8c88777e66b1ba
-        expression: 'avg(/Advanced ICMP Ping/icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},avg],5m)>{$ADV_ICMP_RESPONSE_TIME_WARN}'
+        expression: 'avg(/Advanced ICMP Ping/icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},avg],5m)>{$ADV_ICMP_RESPONSE_TIME_WARN} and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)>0'
         name: 'Advanced ICMP: High response time'
-        opdata: 'Average RTT: {ITEM.LASTVALUE1}'
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: 'min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)<100'
-        - name: 'Advanced ICMP: Unavailable by ICMP ping'
-          expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=3 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=0 and (count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)<30 or max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)>0)'
-        - name: 'Advanced ICMP: Long unavailable by ICMP ping'
-          expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=30 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=0'
+          expression: 'min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)<100'
         tags:
         - tag: scope
           value: performance
-    - uuid: d8d8db199d624880b9c2a14e2f286c61
-      name: 'Advanced ICMP: maximum response time'
-      type: SIMPLE
-      key: 'icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},max]'
-      delay: 1m
-      history: 30d
-      value_type: FLOAT
-      units: ms
-      description: 'Maximum RTT from the native Zabbix ICMP batch, converted from seconds to milliseconds.'
-      preprocessing:
-      - type: MULTIPLIER
-        parameters:
-        - '1000'
-      tags:
-      - tag: component
-        value: network
-      - tag: component
-        value: performance
-    - uuid: 9ab980868ea5456a8a7d7ba5bba17fba
-      name: 'Advanced ICMP: minimum response time'
-      type: SIMPLE
-      key: 'icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},min]'
-      delay: 1m
-      history: 30d
-      value_type: FLOAT
-      units: ms
-      description: 'Minimum RTT from the native Zabbix ICMP batch, converted from seconds to milliseconds.'
-      preprocessing:
-      - type: MULTIPLIER
-        parameters:
-        - '1000'
-      tags:
-      - tag: component
-        value: network
-      - tag: component
-        value: performance
     tags:
     - tag: class
       value: network
@@ -175,9 +126,6 @@ zabbix_export:
     - macro: '{$ADV_ICMP_LOSS_WARN}'
       value: '20'
       description: 'Packet loss warning threshold in percent.'
-    - macro: '{$ADV_ICMP_MAX_TIME_MULTIPLE}'
-      value: '30'
-      description: 'Maximum allowed ratio between five-minute average maximum and minimum RTT.'
     - macro: '{$ADV_ICMP_RESPONSE_TIME_WARN}'
       value: '200'
       description: 'Average RTT warning threshold in milliseconds.'
@@ -189,19 +137,3 @@ zabbix_export:
         newvalue: Down
       - value: '1'
         newvalue: Up
-  triggers:
-  - uuid: 00ed2654690f4b588c49cd0aec346db9
-    expression: 'avg(/Advanced ICMP Ping/icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},min],5m)>0 and avg(/Advanced ICMP Ping/icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},max],5m)/avg(/Advanced ICMP Ping/icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},min],5m)>{$ADV_ICMP_MAX_TIME_MULTIPLE}'
-    name: 'Advanced ICMP: High time differences (Min/Max)'
-    opdata: 'Min: {ITEM.LASTVALUE2}, max: {ITEM.LASTVALUE1}'
-    priority: WARNING
-    dependencies:
-    - name: 'Advanced ICMP: High packet loss'
-      expression: 'min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)<100'
-    - name: 'Advanced ICMP: Unavailable by ICMP ping'
-      expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=3 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=0 and (count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)<30 or max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)>0)'
-    - name: 'Advanced ICMP: Long unavailable by ICMP ping'
-      expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=30 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=0'
-    tags:
-    - tag: scope
-      value: performance
