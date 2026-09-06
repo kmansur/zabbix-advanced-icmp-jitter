@@ -250,7 +250,11 @@ def test_main_translates_fping_resolution_error(monkeypatch, capsys):
         returncode = 2
 
     monkeypatch.setattr(advanced_icmp_ping.subprocess, "run", lambda *args, **kwargs: Completed())
-    monkeypatch.setattr(advanced_icmp_ping.sys, "argv", ["advanced_icmp_ping.py", "invalid.example"])
+    monkeypatch.setattr(
+        advanced_icmp_ping.sys,
+        "argv",
+        ["advanced_icmp_ping.py", "invalid.example"],
+    )
 
     with pytest.raises(SystemExit):
         advanced_icmp_ping.main()
