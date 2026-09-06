@@ -1,5 +1,7 @@
 # Contributing
 
+**English** | [Português (Brasil)](CONTRIBUTING.pt-BR.md)
+
 Contributions, bug reports, documentation improvements, and compatibility updates are welcome.
 
 ## Development workflow
@@ -8,7 +10,7 @@ Contributions, bug reports, documentation improvements, and compatibility update
 2. Make one focused change.
 3. Run the local validation commands.
 4. Update documentation when behavior, installation, or compatibility changes.
-5. Update `CHANGELOG.md` when the change is user-visible.
+5. Update `CHANGELOG.md` and `CHANGELOG.pt-BR.md` when the change is user-visible.
 6. Open a pull request.
 
 Recommended branch names:
@@ -86,7 +88,7 @@ The current historical project version is:
 1.0-10
 ```
 
-It is kept unchanged during this repository-only reorganization so the tested Zabbix exports are not modified unnecessarily.
+It is kept unchanged during repository-only reorganizations so tested Zabbix exports are not modified unnecessarily.
 
 The next **functional** release should transition to Semantic Versioning (`MAJOR.MINOR.PATCH`), for example `1.0.11` or `1.1.0`, depending on the scope of the change. From that point onward:
 

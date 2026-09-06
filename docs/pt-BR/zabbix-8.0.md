@@ -1,5 +1,7 @@
 # Compatibilidade com Zabbix 8.0
 
+[English](../en/zabbix-8.0.md) | **Português (Brasil)**
+
 O projeto possui um export específico para Zabbix 8.0 em:
 
 ```text

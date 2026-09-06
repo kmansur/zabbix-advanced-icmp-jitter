@@ -1,5 +1,7 @@
 # Ajustes e tuning
 
+[English](../en/tuning.md) | **Português (Brasil)**
+
 Os valores ideais dependem da característica do enlace, quantidade de hosts monitorados e sensibilidade desejada para alertas.
 
 ## Monitoramento WAN geral

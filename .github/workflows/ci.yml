@@ -53,3 +53,6 @@ jobs:
 
       - name: Validate versioned Zabbix templates
         run: python tools/validate_templates.py
+
+      - name: Validate bilingual documentation parity
+        run: python tools/validate_docs.py

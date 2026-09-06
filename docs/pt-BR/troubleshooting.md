@@ -1,5 +1,7 @@
 # Troubleshooting
 
+[English](../en/troubleshooting.md) | **Português (Brasil)**
+
 ## O Zabbix informa que o script não foi encontrado
 
 Confirme o caminho e as permissões:

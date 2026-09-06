@@ -1,5 +1,7 @@
 # Métricas e dashboard
 
+[English](../en/metrics.md) | **Português (Brasil)**
+
 ## Arquitetura de coleta
 
 O template executa um único lote ICMP por atualização. O item mestre chama o coletor Python e recebe JSON; todos os demais itens usam o mesmo payload por meio de itens dependentes e JSONPath.

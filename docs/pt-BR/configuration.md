@@ -1,5 +1,7 @@
 # Configuração e macros
 
+[English](../en/configuration.md) | **Português (Brasil)**
+
 ## Destino monitorado
 
 O item mestre usa:

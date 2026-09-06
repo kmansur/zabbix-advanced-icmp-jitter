@@ -1,5 +1,7 @@
 # Advanced ICMP Ping with Jitter — Português (Brasil)
 
+[English](../en/README.md) | **Português (Brasil)**
+
 Template para monitoramento avançado de ICMP no Zabbix, incluindo latência, perda de pacotes, jitter e desvio padrão de RTT usando `fping` e um coletor externo em Python.
 
 ## Compatibilidade
@@ -41,6 +43,7 @@ O coletor executa um único lote de `fping -C`, interpreta cada amostra de RTT e
 ```text
 .github/                 CI, segurança, Dependabot e templates do GitHub
 docs/
+├── en/                  Documentação em inglês
 ├── images/              Imagens da documentação
 └── pt-BR/               Documentação em Português do Brasil
 scripts/                 Coletor externo usado em produção
@@ -80,4 +83,4 @@ python tools/validate_templates.py
 
 O validador confere a versão declarada pelo YAML e a paridade semântica entre os exports mantidos, sem exigir serialização idêntica entre versões do Zabbix.
 
-Consulte também [CONTRIBUTING.md](../../CONTRIBUTING.md), [SECURITY.md](../../SECURITY.md), [CHANGELOG.md](../../CHANGELOG.md) e [NOTICE.md](../../NOTICE.md).
+Consulte também [CONTRIBUTING.pt-BR.md](../../CONTRIBUTING.pt-BR.md), [SECURITY.pt-BR.md](../../SECURITY.pt-BR.md), [CHANGELOG.pt-BR.md](../../CHANGELOG.pt-BR.md) e [NOTICE.pt-BR.md](../../NOTICE.pt-BR.md).

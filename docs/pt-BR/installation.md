@@ -1,5 +1,7 @@
 # Instalação
 
+[English](../en/installation.md) | **Português (Brasil)**
+
 ## Requisitos
 
 - Zabbix Server ou Zabbix Proxy compatível com um dos exports mantidos;

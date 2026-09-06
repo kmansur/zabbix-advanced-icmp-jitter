@@ -1,5 +1,7 @@
 # Triggers
 
+[English](../en/triggers.md) | **Português (Brasil)**
+
 ## Ativados por padrão
 
 - `Advanced ICMP: Unavailable by ICMP ping`;
