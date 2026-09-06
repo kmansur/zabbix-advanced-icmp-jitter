@@ -45,7 +45,7 @@ Both triggers recover automatically when the expression becomes false and replie
 ## Packet loss
 
 ```text
-last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
 ```
 
 The threshold is controlled by `{$ADV_ICMP_LOSS_WARN}`.
@@ -89,3 +89,5 @@ last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
 ```
 
 It reports operational problems such as a missing `fping` command, command timeout, or output that the parser cannot recognize.
+
+Two consecutive degraded samples are required, and both must still have at least one ICMP reply. Complete loss is handled by the availability triggers. Collector failures are suppressed through the `Advanced ICMP: Collector error` dependency.

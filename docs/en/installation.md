@@ -10,7 +10,7 @@
 - `ExternalScripts` configured or the installation default path in use;
 - the Zabbix process user must be allowed to execute `fping` and the collector.
 
-The collector remains compatible with Python 3.6+; project CI tests current Python versions to prevent regressions in maintained code.
+The collector remains compatible with Python 3.9+; project CI tests current Python versions to prevent regressions in maintained code.
 
 ## Installing dependencies
 
@@ -111,3 +111,8 @@ sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 2001:4860:4
 ```
 
 The server/proxy must have IPv6 connectivity and the installed `fping` must provide appropriate IPv6 support.
+
+
+## Where the collector runs
+
+`advanced_icmp_ping.py` is a Zabbix **external check**. It runs on the Zabbix server or on the Zabbix proxy responsible for the host, not on the monitored device. That server/proxy must have Python and `fping` installed and executable by the Zabbix service account.
