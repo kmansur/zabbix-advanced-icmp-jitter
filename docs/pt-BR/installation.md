@@ -10,7 +10,7 @@
 - diretório `ExternalScripts` configurado ou utilizando o caminho padrão da instalação;
 - usuário do processo Zabbix com permissão para executar `fping` e o coletor.
 
-O coletor foi mantido compatível com Python 3.6+; o CI do projeto testa versões atuais do Python para evitar regressões no código mantido.
+O coletor foi mantido compatível com Python 3.9+; o CI do projeto testa versões atuais do Python para evitar regressões no código mantido.
 
 ## Instalação das dependências
 
@@ -111,3 +111,8 @@ sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 2001:4860:4
 ```
 
 É necessário que o servidor/proxy tenha conectividade IPv6 e que o `fping` instalado ofereça suporte adequado.
+
+
+## Onde o coletor é executado
+
+O `advanced_icmp_ping.py` é um **external check** do Zabbix. Ele é executado no Zabbix server ou no Zabbix proxy responsável pelo host, e não no dispositivo monitorado. Esse server/proxy deve ter Python e `fping` instalados e executáveis pela conta de serviço do Zabbix.

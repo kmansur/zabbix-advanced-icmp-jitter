@@ -84,3 +84,4 @@ python tools/validate_templates.py
 The validator checks the version declared by each YAML file and semantic parity across maintained exports without requiring identical serialization between Zabbix versions.
 
 See also [CONTRIBUTING.md](../../CONTRIBUTING.md), [SECURITY.md](../../SECURITY.md), [CHANGELOG.md](../../CHANGELOG.md), and [NOTICE.md](../../NOTICE.md).
+- [Upgrading from legacy AdvancedPING](legacy-advancedping-upgrade.md)

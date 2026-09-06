@@ -45,7 +45,7 @@ Ambos recuperam automaticamente quando a expressão volta a ser falsa e novas re
 ## Perda de pacotes
 
 ```text
-last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
 ```
 
 O limite é controlado por `{$ADV_ICMP_LOSS_WARN}`.
@@ -89,3 +89,5 @@ last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
 ```
 
 Ele sinaliza problemas operacionais como `fping` ausente, timeout do comando ou saída não reconhecida pelo parser.
+
+São exigidas duas amostras consecutivas degradadas, e ambas ainda precisam ter pelo menos uma resposta ICMP. A perda total é tratada pelas triggers de indisponibilidade. Falhas do coletor são suprimidas pela dependência `Advanced ICMP: Collector error`.
