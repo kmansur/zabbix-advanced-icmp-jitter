@@ -25,15 +25,8 @@ jobs:
 
           target = Path('.github/workflows/_apply-native-review-fixes.yml')
           text = target.read_text(encoding='utf-8')
-          old = '''          python -m compileall -q scripts tools tests
-          ruff check scripts tools tests
-          ruff format --check scripts tools tests
-'''
-          new = '''          python -m compileall -q scripts tools tests
-          ruff format scripts tools tests
-          ruff check scripts tools tests
-          ruff format --check scripts tools tests
-'''
+          old = "          python -m compileall -q scripts tools tests\n          ruff check scripts tools tests\n          ruff format --check scripts tools tests\n"
+          new = "          python -m compileall -q scripts tools tests\n          ruff format scripts tools tests\n          ruff check scripts tools tests\n          ruff format --check scripts tools tests\n"
           if old not in text:
               raise SystemExit('validation block not found')
           target.write_text(text.replace(old, new, 1), encoding='utf-8')
