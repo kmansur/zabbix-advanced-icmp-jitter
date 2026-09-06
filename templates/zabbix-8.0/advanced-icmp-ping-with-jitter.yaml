@@ -133,6 +133,7 @@ zabbix_export:
       type: DEPENDENT
       key: advanced.ping.loss
       history: 90d
+      value_type: FLOAT
       units: '%'
       preprocessing:
       - type: JSONPATH

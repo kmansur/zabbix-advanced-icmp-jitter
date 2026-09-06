@@ -29,6 +29,7 @@ O coletor executa um único lote de `fping -C`, interpreta cada amostra de RTT e
 
 ## Documentação
 
+- [Modos de implantação: nativo vs. jitter](deployment-modes.md)
 - [Instalação](installation.md)
 - [Atualização a partir do AdvancedPING legado](legacy-advancedping-upgrade.md)
 - [Configuração e macros](configuration.md)

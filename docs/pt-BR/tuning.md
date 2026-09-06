@@ -8,8 +8,8 @@ Os valores ideais dependem da característica do enlace, quantidade de hosts mon
 
 ```text
 {$ADV_FPING_POOL_COUNT}=20
-{$ADV_FPING_INTERVAL_MS}=100
-{$ADV_FPING_TIMEOUT_MS}=1000
+{$ADV_FPING_INTERVAL_MS}=250
+{$ADV_FPING_TIMEOUT_MS}=250
 {$ADV_ICMP_JITTER_WARN}=20
 ```
 
@@ -20,6 +20,7 @@ Os valores ideais dependem da característica do enlace, quantidade de hosts mon
 ```text
 {$ADV_FPING_POOL_COUNT}=20
 {$ADV_FPING_INTERVAL_MS}=50
+{$ADV_FPING_TIMEOUT_MS}=50
 {$ADV_ICMP_JITTER_WARN}=5
 {$ADV_ICMP_STDDEV_WARN}=10
 ```
@@ -31,6 +32,7 @@ Use limites menores somente quando a rede realmente tiver latência e variação
 ```text
 {$ADV_FPING_POOL_COUNT}=20
 {$ADV_FPING_INTERVAL_MS}=100
+{$ADV_FPING_TIMEOUT_MS}=100
 {$ADV_ICMP_JITTER_WARN}=30
 {$ADV_ICMP_STDDEV_WARN}=50
 ```
@@ -40,6 +42,7 @@ Use limites menores somente quando a rede realmente tiver latência e variação
 ```text
 {$ADV_FPING_POOL_COUNT}=30
 {$ADV_FPING_INTERVAL_MS}=50
+{$ADV_FPING_TIMEOUT_MS}=50
 {$ADV_ICMP_JITTER_WARN}=20
 {$ADV_ICMP_STDDEV_WARN}=30
 ```
@@ -63,7 +66,9 @@ O timeout real do processo Python inclui uma margem adicional sobre o tempo espe
 
 ## Escala do ambiente
 
-Em servidores ou proxies que monitoram muitos hosts:
+Para monitoramento amplo de disponibilidade ICMP, perda e RTT médio, prefira o template nativo `Advanced ICMP Ping`. O Zabbix consegue agrupar alvos que compartilham parâmetros ICMP idênticos nos processos dedicados de pinger. Reserve `Advanced ICMP Ping with Jitter` para caminhos selecionados onde jitter e desvio padrão de RTT justifiquem um coletor externo por host.
+
+Em servidores ou proxies que monitoram muitos hosts com o template de jitter:
 
 - evite intervalos extremamente baixos;
 - considere distribuir coleta entre proxies;
@@ -81,3 +86,7 @@ Antes de reduzir thresholds, observe o comportamento real da rede por alguns dia
 - `{$ADV_ICMP_STDDEV_WARN}` é mais útil em enlaces onde estabilidade importa tanto quanto a média.
 
 O trigger de desvio padrão fica desabilitado por padrão para evitar ruído em ambientes onde essa métrica é apenas informativa.
+
+## Retenção
+
+O template nativo usa por padrão 30 dias de histórico bruto. O template de jitter atualmente mantém 90 dias para métricas numéricas e 1 hora para o JSON bruto. Reduza o histórico bruto quando a escala do banco for mais importante que análise forense em alta resolução; trends numéricos preservam o comportamento de longo prazo com custo muito menor.

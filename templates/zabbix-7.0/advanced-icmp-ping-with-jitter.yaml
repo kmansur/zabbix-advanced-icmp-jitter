@@ -60,6 +60,7 @@ zabbix_export:
       key: advanced.ping.loss
       delay: '0'
       history: 90d
+      value_type: FLOAT
       units: '%'
       preprocessing:
       - type: JSONPATH

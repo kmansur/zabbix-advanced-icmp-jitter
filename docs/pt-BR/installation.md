@@ -12,6 +12,12 @@
 
 O CI do projeto testa Python 3.9 e versões atuais do Python para evitar regressões no coletor mantido.
 
+## Escolha do modo de implantação
+
+Para a maioria dos hosts, importe e use `advanced-icmp-ping.yaml`. Ele precisa do `fping` no Zabbix server/proxy, mas não exige o coletor externo Python. Use `advanced-icmp-ping-with-jitter.yaml` somente nos alvos selecionados que precisam de jitter ou desvio padrão de RTT.
+
+O template de jitter executa o item mestre `EXTERNAL` no Zabbix server/proxy, não no host monitorado. Portanto, cada host vinculado inicia uma execução Python/`fping` por ciclo de coleta.
+
 ## Instalação das dependências
 
 ### Debian / Ubuntu

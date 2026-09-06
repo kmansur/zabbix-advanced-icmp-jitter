@@ -65,6 +65,13 @@ def test_stats_with_partial_loss():
     assert result["rtts"] == [10.0, 12.0, 14.0]
 
 
+def test_stats_preserves_fractional_packet_loss():
+    result = advanced_icmp_ping.stats([10.0, None, 12.0, 14.0, None, 16.0, 18.0])
+
+    assert result["loss"] == 28.571
+    assert isinstance(result["loss"], float)
+
+
 def test_stats_with_total_loss():
     result = advanced_icmp_ping.stats([None, None, None, None])
 

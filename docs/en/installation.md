@@ -12,6 +12,12 @@
 
 Project CI tests Python 3.9 and current Python releases to prevent regressions in the maintained collector.
 
+## Choose the deployment mode
+
+For most hosts, import and use `advanced-icmp-ping.yaml`. It needs `fping` on the Zabbix server/proxy but does not require the Python external collector. Use `advanced-icmp-ping-with-jitter.yaml` only for selected targets that need jitter or RTT standard deviation.
+
+The jitter template executes the `EXTERNAL` master item on the Zabbix server/proxy, not on the monitored host. Each linked host therefore starts one Python/`fping` collector execution per collection cycle.
+
 ## Installing dependencies
 
 ### Debian / Ubuntu

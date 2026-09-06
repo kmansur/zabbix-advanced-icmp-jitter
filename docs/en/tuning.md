@@ -8,8 +8,8 @@ Ideal values depend on link characteristics, the number of monitored hosts, and 
 
 ```text
 {$ADV_FPING_POOL_COUNT}=20
-{$ADV_FPING_INTERVAL_MS}=100
-{$ADV_FPING_TIMEOUT_MS}=1000
+{$ADV_FPING_INTERVAL_MS}=250
+{$ADV_FPING_TIMEOUT_MS}=250
 {$ADV_ICMP_JITTER_WARN}=20
 ```
 
@@ -20,6 +20,7 @@ This is the project default profile and provides a good balance between batch du
 ```text
 {$ADV_FPING_POOL_COUNT}=20
 {$ADV_FPING_INTERVAL_MS}=50
+{$ADV_FPING_TIMEOUT_MS}=50
 {$ADV_ICMP_JITTER_WARN}=5
 {$ADV_ICMP_STDDEV_WARN}=10
 ```
@@ -31,6 +32,7 @@ Use lower thresholds only when the network actually has very low latency and var
 ```text
 {$ADV_FPING_POOL_COUNT}=20
 {$ADV_FPING_INTERVAL_MS}=100
+{$ADV_FPING_TIMEOUT_MS}=100
 {$ADV_ICMP_JITTER_WARN}=30
 {$ADV_ICMP_STDDEV_WARN}=50
 ```
@@ -40,6 +42,7 @@ Use lower thresholds only when the network actually has very low latency and var
 ```text
 {$ADV_FPING_POOL_COUNT}=30
 {$ADV_FPING_INTERVAL_MS}=50
+{$ADV_FPING_TIMEOUT_MS}=50
 {$ADV_ICMP_JITTER_WARN}=20
 {$ADV_ICMP_STDDEV_WARN}=30
 ```
@@ -63,7 +66,9 @@ The actual Python process timeout includes additional margin over the expected `
 
 ## Environment scale
 
-On servers or proxies monitoring many hosts:
+For broad ICMP availability, packet-loss and average-RTT monitoring, prefer the `Advanced ICMP Ping` native template. Zabbix can batch targets that share identical ICMP parameters through dedicated pinger processes. Reserve `Advanced ICMP Ping with Jitter` for selected paths where jitter and RTT standard deviation justify a per-host external collector.
+
+On servers or proxies monitoring many hosts with the jitter template:
 
 - avoid extremely low intervals;
 - consider distributing collection across proxies;
@@ -81,3 +86,7 @@ Before lowering thresholds, observe normal network behavior for a few days. In p
 - `{$ADV_ICMP_STDDEV_WARN}` is most useful on links where stability matters as much as average latency.
 
 The standard deviation trigger is disabled by default to avoid noise in environments where the metric is only informational.
+
+## Retention
+
+The native template defaults to 30 days of raw history. The jitter template currently keeps 90 days for numeric metrics and 1 hour for raw JSON. Reduce raw history where database scale is more important than high-resolution forensic analysis; numeric trends preserve long-term behavior at much lower storage cost.

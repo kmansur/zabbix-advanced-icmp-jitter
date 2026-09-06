@@ -120,7 +120,6 @@ def normalize_item(item):
         "trends": str(trends if trends is not None else ""),
         "status": str(item.get("status", "ENABLED")),
         "timeout": str(item.get("timeout", "")),
-        "delay": str(item.get("delay", "")),
         "preprocessing": normalize_preprocessing(item.get("preprocessing", [])),
         "master_item": str(master_item.get("key", "")),
         "tags": normalize_tags(item.get("tags", [])),
@@ -236,7 +235,9 @@ def validate_cross_version_parity(exports):
 def validate_external_script(exports):
     for version, (_, data) in exports.items():
         template = get_template(data)
-        external_items = [item for item in template.get("items", []) if item.get("type") == "EXTERNAL"]
+        external_items = [
+            item for item in template.get("items", []) if item.get("type") == "EXTERNAL"
+        ]
         if len(external_items) != 1:
             fail(f"Zabbix {version}: expected exactly one EXTERNAL master item")
         item = external_items[0]
@@ -284,6 +285,25 @@ def validate_macro_timing(exports):
             )
 
 
+def validate_collector_float_contract(exports):
+    float_paths = {"$.avg", "$.jitter", "$.max", "$.min", "$.stddev", "$.loss"}
+    for version, (_, data) in exports.items():
+        for item in get_template(data).get("items", []):
+            if item.get("type") != "DEPENDENT":
+                continue
+            jsonpaths = {
+                str(value)
+                for step in item.get("preprocessing", [])
+                if step.get("type") == "JSONPATH"
+                for value in step.get("parameters", [])
+            }
+            if jsonpaths & float_paths and str(item.get("value_type", "UNSIGNED")) != "FLOAT":
+                fail(
+                    f"Zabbix {version}: dependent item {item.get('key')!r} maps a float "
+                    "collector field and must declare value_type FLOAT"
+                )
+
+
 def validate_item_tags(exports):
     for version, (_, data) in exports.items():
         for item in get_template(data).get("items", []):
@@ -301,15 +321,24 @@ def validate_trigger_policy(exports):
         packet_loss = names.get(HIGH_PACKET_LOSS_TRIGGER)
         if packet_loss is None:
             fail(f"Zabbix {version}: high packet loss trigger not found")
-        if "min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)" not in packet_loss["expression"]:
+        if (
+            "min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)"
+            not in packet_loss["expression"]
+        ):
             fail(f"Zabbix {version}: packet loss trigger must evaluate both latest samples")
-        if "min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0" not in packet_loss["expression"]:
+        if (
+            "min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0"
+            not in packet_loss["expression"]
+        ):
             fail(
                 f"Zabbix {version}: packet loss trigger must require received packets "
                 "in both latest samples"
             )
         for trigger in triggers.values():
-            if "last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)" in trigger["expression"]:
+            if (
+                "last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)"
+                in trigger["expression"]
+            ):
                 fail(f"Zabbix {version}: trigger {trigger['name']!r} uses last(...,#2) incorrectly")
             for _, expression in trigger["dependencies"]:
                 if "last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)" in expression:
@@ -335,8 +364,6 @@ def validate_native_template(exports):
         "icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}]",
         "icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}]",
         "icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},avg]",
-        "icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},min]",
-        "icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},max]",
     }
     required_macros = {
         "{$ADV_ICMP_PACKETS}": "20",
@@ -344,54 +371,100 @@ def validate_native_template(exports):
         "{$ADV_ICMP_TIMEOUT_MS}": "250",
         "{$ADV_ICMP_LOSS_WARN}": "20",
         "{$ADV_ICMP_RESPONSE_TIME_WARN}": "200",
-        "{$ADV_ICMP_MAX_TIME_MULTIPLE}": "30",
     }
     for version, (_, data) in exports.items():
         template = get_template(data)
         if template.get("template") != "Advanced ICMP Ping":
             fail(f"Zabbix {version}: unexpected native template name")
+
         items = template.get("items", [])
-        if len(items) != 5 or {str(item.get("key", "")) for item in items} != expected_keys:
-            fail(f"Zabbix {version}: native template must contain exactly the five expected ICMP items")
+        keys = {str(item.get("key", "")) for item in items}
+        if len(items) != 3 or keys != expected_keys:
+            fail(
+                f"Zabbix {version}: native template must contain exactly "
+                "availability, loss and average RTT"
+            )
         if any(item.get("type") != "SIMPLE" for item in items):
             fail(f"Zabbix {version}: native ICMP items must all use SIMPLE checks")
+
         for item in items:
             if str(item.get("delay", "")) != "1m":
                 fail(f"Zabbix {version}: native ICMP item {item.get('key')!r} must use 1m interval")
             if str(item.get("history", "")) != "30d":
                 fail(f"Zabbix {version}: native ICMP item {item.get('key')!r} must use 30d history")
-        for item in items:
             key = str(item.get("key", ""))
-            if key.startswith("icmppingloss") or key.startswith("icmppingsec"):
+            if key.startswith(("icmppingloss", "icmppingsec")):
                 if str(item.get("value_type", "UNSIGNED")) != "FLOAT":
                     fail(f"Zabbix {version}: native item {key!r} must declare value_type FLOAT")
             if key.startswith("icmppingsec"):
                 steps = normalize_preprocessing(item.get("preprocessing", []))
                 if ("MULTIPLIER", ("1000",), "", "") not in steps:
-                    fail(f"Zabbix {version}: native RTT item {key!r} must convert seconds to milliseconds")
+                    fail(
+                        f"Zabbix {version}: native RTT item {key!r} "
+                        "must convert seconds to milliseconds"
+                    )
+
         macros = {m["macro"]: str(m.get("value", "")) for m in template.get("macros", [])}
         for macro, expected in required_macros.items():
             if macros.get(macro) != expected:
                 fail(f"Zabbix {version}: native macro {macro} must default to {expected}")
+
         triggers = {trigger["name"]: trigger for trigger in collect_trigger_nodes(data).values()}
         required_triggers = {
             "Advanced ICMP: Unavailable by ICMP ping",
             "Advanced ICMP: Long unavailable by ICMP ping",
             "Advanced ICMP: High packet loss",
             "Advanced ICMP: High response time",
-            "Advanced ICMP: High time differences (Min/Max)",
         }
         if set(triggers) != required_triggers:
             fail(f"Zabbix {version}: native template trigger set differs from policy")
+
         short = triggers["Advanced ICMP: Unavailable by ICMP ping"]["expression"]
         long = triggers["Advanced ICMP: Long unavailable by ICMP ping"]["expression"]
         loss = triggers["Advanced ICMP: High packet loss"]["expression"]
-        if "count(/Advanced ICMP Ping/icmpping[" not in short or ",#3)=3" not in short or ",#30)<30" not in short:
-            fail(f"Zabbix {version}: short outage trigger must require 3 samples and stop before 30-sample outage")
-        if "count(/Advanced ICMP Ping/icmpping[" not in long or ",#30)=30" not in long or ",#30)=0" not in long:
+        response = triggers["Advanced ICMP: High response time"]["expression"]
+
+        if not all(
+            token in short
+            for token in (
+                "count(/Advanced ICMP Ping/icmpping[",
+                ",#3)=3",
+                ",#30)<30",
+                ",#30)>0",
+            )
+        ):
+            fail(
+                f"Zabbix {version}: short outage trigger must require 3 samples "
+                "and stop at the 30-sample outage"
+            )
+        if not all(
+            token in long
+            for token in (
+                "count(/Advanced ICMP Ping/icmpping[",
+                ",#30)=30",
+                "max(/Advanced ICMP Ping/icmpping[",
+                ",#30)=0",
+            )
+        ):
             fail(f"Zabbix {version}: long outage trigger must require 30 collected zero samples")
-        if ",#2)>{$ADV_ICMP_LOSS_WARN}" not in loss or ",#2)<100" not in loss:
-            fail(f"Zabbix {version}: native packet loss trigger must suppress complete outage")
+        if not all(
+            token in loss
+            for token in (
+                ",#2)>{$ADV_ICMP_LOSS_WARN}",
+                "max(/Advanced ICMP Ping/icmppingloss[",
+                ",#2)<100",
+            )
+        ):
+            fail(
+                f"Zabbix {version}: native packet loss trigger must require "
+                "two degraded, non-total-loss samples"
+            )
+        if "max(/Advanced ICMP Ping/icmpping[" not in response or ",#3)>0" not in response:
+            fail(
+                f"Zabbix {version}: response-time trigger must recover/suppress "
+                "during complete unavailability"
+            )
+
         for trigger in triggers.values():
             if trigger["priority"] == "DISASTER":
                 fail(f"Zabbix {version}: native template must not use DISASTER severity")
@@ -410,6 +483,7 @@ def main():
 
     validate_external_script(jitter_exports)
     validate_macro_timing(jitter_exports)
+    validate_collector_float_contract(jitter_exports)
     validate_item_tags(jitter_exports)
     validate_trigger_policy(jitter_exports)
 
