@@ -1,5 +1,7 @@
 # Security Policy
 
+**English** | [Português (Brasil)](SECURITY.pt-BR.md)
+
 ## Supported versions
 
 Security fixes are provided for the latest maintained project version.
