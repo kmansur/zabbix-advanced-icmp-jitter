@@ -1,3 +1,4 @@
-PyYAML>=6
-pytest>=8
-ruff>=0.9
+PyYAML==6.0.3
+ruff==0.16.6
+pytest==8.4.2; python_version < "3.10"
+pytest==9.1.1; python_version >= "3.10"
