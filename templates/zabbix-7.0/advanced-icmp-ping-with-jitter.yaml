@@ -49,14 +49,8 @@ zabbix_export:
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
           expression: min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
-          dependencies:
-          - name: 'Advanced ICMP: Collector error'
-            expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
           expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
-          dependencies:
-          - name: 'Advanced ICMP: Collector error'
-            expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         - name: 'Advanced ICMP: Collector error'
           expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
     - uuid: eb3e547aeda94ba999b0e84f78c9bfb7
@@ -84,9 +78,6 @@ zabbix_export:
         dependencies:
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
           expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
-          dependencies:
-          - name: 'Advanced ICMP: Collector error'
-            expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         - name: 'Advanced ICMP: Collector error'
           expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
       value_type: FLOAT
@@ -156,9 +147,6 @@ zabbix_export:
         dependencies:
         - name: 'Advanced ICMP: Long unavailable by ICMP ping'
           expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0
-          dependencies:
-          - name: 'Advanced ICMP: Collector error'
-            expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         - name: 'Advanced ICMP: Collector error'
           expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
     - uuid: cebaebd5d69049409b968486ffb96ae9
@@ -211,14 +199,8 @@ zabbix_export:
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
           expression: min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
-          dependencies:
-          - name: 'Advanced ICMP: Collector error'
-            expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
           expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
-          dependencies:
-          - name: 'Advanced ICMP: Collector error'
-            expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         - name: 'Advanced ICMP: Collector error'
           expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
       tags:
@@ -251,14 +233,8 @@ zabbix_export:
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
           expression: min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
-          dependencies:
-          - name: 'Advanced ICMP: Collector error'
-            expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
           expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
-          dependencies:
-          - name: 'Advanced ICMP: Collector error'
-            expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         - name: 'Advanced ICMP: Collector error'
           expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
       tags:
@@ -348,9 +324,6 @@ zabbix_export:
     dependencies:
     - name: 'Advanced ICMP: Unavailable by ICMP ping'
       expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
-      dependencies:
-      - name: 'Advanced ICMP: Collector error'
-        expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
     - name: 'Advanced ICMP: Collector error'
       expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
   graphs:
