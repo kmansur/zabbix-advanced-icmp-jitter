@@ -3,7 +3,7 @@
 [![CI](https://github.com/kmansur/zabbix-advanced-icmp-jitter/actions/workflows/ci.yml/badge.svg)](https://github.com/kmansur/zabbix-advanced-icmp-jitter/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/kmansur/zabbix-advanced-icmp-jitter/actions/workflows/security.yml/badge.svg)](https://github.com/kmansur/zabbix-advanced-icmp-jitter/actions/workflows/security.yml)
 
-[Português (Brasil)](docs/pt-BR/README.md)
+**English** | [Português (Brasil)](README.pt-BR.md)
 
 Zabbix template for advanced ICMP monitoring with latency, packet loss, jitter, and RTT standard deviation. A single Python external check runs `fping`, returns JSON, and feeds dependent Zabbix items from the same probe batch.
 
@@ -14,7 +14,7 @@ Zabbix template for advanced ICMP monitoring with latency, packet loss, jitter, 
 | 7.0 | `templates/zabbix-7.0/advanced-icmp-ping-with-jitter.yaml` | Supported |
 | 8.0 | `templates/zabbix-8.0/advanced-icmp-ping-with-jitter.yaml` | Tested on **Zabbix 8.0 Beta 2**; revalidated as new Beta/RC/final builds are tested |
 
-The Zabbix 8.0 compatibility notes are documented in [docs/pt-BR/zabbix-8.0.md](docs/pt-BR/zabbix-8.0.md).
+The Zabbix 8.0 compatibility notes are documented in [docs/en/zabbix-8.0.md](docs/en/zabbix-8.0.md).
 
 ## Metrics
 
@@ -33,6 +33,7 @@ The template collects one ICMP batch and derives:
 ```text
 .github/                 GitHub workflows, Dependabot, PR and issue templates
 docs/
+├── en/                  English documentation
 ├── images/              Documentation images
 └── pt-BR/               Brazilian Portuguese documentation
 scripts/                 Production Zabbix external collector
@@ -71,17 +72,19 @@ Then import the YAML that matches the target Zabbix major/minor version.
 
 ## Documentation
 
-Brazilian Portuguese:
+English:
 
-- [Overview](docs/pt-BR/README.md)
-- [Installation](docs/pt-BR/installation.md)
-- [Configuration and macros](docs/pt-BR/configuration.md)
-- [Metrics and dashboard](docs/pt-BR/metrics.md)
-- [Triggers](docs/pt-BR/triggers.md)
-- [Tuning](docs/pt-BR/tuning.md)
-- [Troubleshooting](docs/pt-BR/troubleshooting.md)
-- [Zabbix 8.0 compatibility](docs/pt-BR/zabbix-8.0.md)
-- [Versioning](docs/pt-BR/versioning.md)
+- [Overview](docs/en/README.md)
+- [Installation](docs/en/installation.md)
+- [Configuration and macros](docs/en/configuration.md)
+- [Metrics and dashboard](docs/en/metrics.md)
+- [Triggers](docs/en/triggers.md)
+- [Tuning](docs/en/tuning.md)
+- [Troubleshooting](docs/en/troubleshooting.md)
+- [Zabbix 8.0 compatibility](docs/en/zabbix-8.0.md)
+- [Versioning](docs/en/versioning.md)
+
+The Brazilian Portuguese documentation is available under [docs/pt-BR/](docs/pt-BR/README.md).
 
 ## Development
 
