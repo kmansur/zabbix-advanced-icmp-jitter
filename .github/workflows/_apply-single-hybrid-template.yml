@@ -32,29 +32,39 @@ jobs:
           from pathlib import Path
 
           path = Path("tools/validate_templates.py")
-          text = path.read_text(encoding="utf-8")
-          replacements = {
-              '                f"Zabbix {version}: packet loss trigger must use two degraded non-total-loss samples"\n':
-                  '                f"Zabbix {version}: packet loss trigger must use two degraded "\n'
-                  '                "non-total-loss samples"\n',
-              '                    f"Zabbix {version}: advanced trigger {name!r} must depend on collector error and packet loss"\n':
-                  '                    f"Zabbix {version}: advanced trigger {name!r} must depend on "\n'
-                  '                    "collector error and packet loss"\n',
-              '                    f"Zabbix {version}: native core trigger {name!r} must not depend on the external collector"\n':
-                  '                    f"Zabbix {version}: native core trigger {name!r} must not depend "\n'
-                  '                    "on the external collector"\n',
-              '                f"{version_dir.name}: separate native template must not exist; the project ships one hybrid template"\n':
-                  '                f"{version_dir.name}: separate native template must not exist; "\n'
-                  '                "the project ships one hybrid template"\n',
-              '        f"OK: single hybrid ICMP template validated for Zabbix {versions}; project version {project_version}"\n':
-                  '        f"OK: single hybrid ICMP template validated for Zabbix {versions}; "\n'
-                  '        f"project version {project_version}"\n',
-          }
-          for old, new in replacements.items():
-              if old not in text:
-                  raise SystemExit(f"expected validator line not found: {old!r}")
-              text = text.replace(old, new, 1)
-          path.write_text(text, encoding="utf-8")
+          lines = path.read_text(encoding="utf-8").splitlines()
+          output = []
+          replaced = set()
+
+          for line in lines:
+              indent = line[: len(line) - len(line.lstrip())]
+              if "packet loss trigger must use two degraded non-total-loss samples" in line:
+                  output.append(indent + 'f"Zabbix {version}: packet loss trigger must use two degraded "')
+                  output.append(indent + '"non-total-loss samples"')
+                  replaced.add("loss")
+              elif "advanced trigger {name!r} must depend on collector error and packet loss" in line:
+                  output.append(indent + 'f"Zabbix {version}: advanced trigger {name!r} must depend on "')
+                  output.append(indent + '"collector error and packet loss"')
+                  replaced.add("advanced")
+              elif "native core trigger {name!r} must not depend on the external collector" in line:
+                  output.append(indent + 'f"Zabbix {version}: native core trigger {name!r} must not depend "')
+                  output.append(indent + '"on the external collector"')
+                  replaced.add("native")
+              elif "separate native template must not exist; the project ships one hybrid template" in line:
+                  output.append(indent + 'f"{version_dir.name}: separate native template must not exist; "')
+                  output.append(indent + '"the project ships one hybrid template"')
+                  replaced.add("single")
+              elif "single hybrid ICMP template validated for Zabbix" in line and "project version" in line:
+                  output.append(indent + 'f"OK: single hybrid ICMP template validated for Zabbix {versions}; "')
+                  output.append(indent + 'f"project version {project_version}"')
+                  replaced.add("print")
+              else:
+                  output.append(line)
+
+          expected = {"loss", "advanced", "native", "single", "print"}
+          if replaced != expected:
+              raise SystemExit(f"validator normalization incomplete: {sorted(expected - replaced)}")
+          path.write_text("\n".join(output) + "\n", encoding="utf-8")
       - name: Format and validate
         run: |
           ruff format tools/validate_templates.py tests
