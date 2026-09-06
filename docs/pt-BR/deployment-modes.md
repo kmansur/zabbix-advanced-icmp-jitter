@@ -1,23 +1,29 @@
-# Modos de implantação
+# Arquitetura de implantação
 
 [English](../en/deployment-modes.md) | **Português (Brasil)**
 
-O projeto oferece dois modos complementares de monitoramento.
+O projeto usa **um único template híbrido**: `Advanced ICMP Ping with Jitter`.
 
-## Advanced ICMP Ping — padrão nativo e escalável
+## Caminho principal — nativo e escalável
 
-Use `advanced-icmp-ping.yaml` para aplicação ampla. Ele usa checks `SIMPLE` nativos do Zabbix:
+A cada minuto o Zabbix usa seus checks `SIMPLE` nativos:
 
 - `icmpping` para disponibilidade;
 - `icmppingloss` para perda de pacotes;
 - `icmppingsec` em modo `avg` para RTT médio.
 
-Os três são executados pelos processos ICMP pinger do Zabbix server/proxy. Alvos com parâmetros idênticos podem ser agrupados e verificados pelo `fping` em paralelo, evitando um processo Python por host monitorado. O intervalo padrão é de um minuto, com indisponibilidade curta em aproximadamente 3 minutos e prolongada em aproximadamente 30 minutos.
+Esses checks são processados pelos ICMP pingers do Zabbix server/proxy. Destinos com parâmetros compatíveis podem ser agrupados pelo `fping`, evitando um processo Python por host no caminho de monitoramento que determina estado, perda e latência média.
 
-## Advanced ICMP Ping with Jitter — estatística avançada seletiva
+## Estatística avançada — integrada ao mesmo template
 
-Use `advanced-icmp-ping-with-jitter.yaml` onde forem necessárias amostras individuais de RTT, jitter, desvio padrão populacional ou min/max do mesmo lote de pacotes. Seu item mestre é um check `EXTERNAL`: o Zabbix server/proxy inicia o coletor Python, que inicia o `fping`, para cada host vinculado e ciclo de coleta.
+O mesmo template mantém um único item `EXTERNAL`, mas em frequência menor, controlada por `{$ADV_ICMP_STATS_INTERVAL}` (padrão `5m`). Ele existe apenas para métricas que o ICMP nativo não fornece a partir dos RTTs individuais do mesmo lote:
 
-Alvos típicos incluem gateways WAN, enlaces entre sites, firewalls, roteadores de borda, caminhos de voz/vídeo e enlaces em troubleshooting.
+- jitter pacote a pacote;
+- desvio padrão do RTT;
+- RTT mínimo e máximo do mesmo lote de amostras.
 
-Não vincule os dois templates ao mesmo host, a menos que queira intencionalmente o baseline nativo e também a carga estatística externa adicional.
+Se o coletor avançado falhar, o item `Collector error` alerta, porém disponibilidade, perda e RTT médio continuam sendo medidos pelo ICMP nativo e não dependem do Python.
+
+## Escala
+
+Para ambientes maiores, mantenha o core em `1m` e aumente apenas `{$ADV_ICMP_STATS_INTERVAL}` para `10m` ou `15m` se a estatística avançada não precisar de alta frequência. Assim, a sensibilidade do estado do dispositivo permanece em aproximadamente 3 minutos, enquanto a carga de external checks pode ser reduzida de forma independente.

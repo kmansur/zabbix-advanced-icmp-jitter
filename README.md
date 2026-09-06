@@ -5,7 +5,9 @@
 
 **English** | [Português (Brasil)](README.pt-BR.md)
 
-Zabbix template for advanced ICMP monitoring with latency, packet loss, jitter, and RTT standard deviation. A single Python external check runs `fping`, returns JSON, and feeds dependent Zabbix items from the same probe batch.
+Hybrid Zabbix ICMP template built for scale: availability, packet loss and average RTT use the native Zabbix ICMP pinger every minute, while a lower-frequency Python/fping collector adds jitter, RTT standard deviation and same-batch min/max statistics.
+
+The architecture ships as **one template** and keeps device availability independent of the external collector.
 
 ## Compatibility
 
@@ -65,7 +67,7 @@ chmod +x /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py
 Test it as the Zabbix user:
 
 ```sh
-sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 8.8.8.8 20 100 1000
+sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 8.8.8.8 20 250 250
 ```
 
 Then import the YAML that matches the target Zabbix major/minor version.

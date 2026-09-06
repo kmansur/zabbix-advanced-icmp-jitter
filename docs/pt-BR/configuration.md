@@ -28,12 +28,14 @@ advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTER
 
 Os parâmetros são posicionais porque o Zabbix passa as macros diretamente para o script externo.
 
-O External check mestre possui intervalo de atualização explícito de `1m`. Portanto, as janelas dos triggers baseadas em quantidade de coletas correspondem aproximadamente a:
+Os checks nativos de disponibilidade, perda e RTT médio usam intervalo de `1m`. Portanto, as janelas de indisponibilidade correspondem aproximadamente a:
 
 ```text
 #3  = aproximadamente 3 minutos
 #30 = aproximadamente 30 minutos
 ```
+
+O External check de estatística avançada não determina o estado do host. Ele usa `{$ADV_ICMP_STATS_INTERVAL}`, com padrão `5m`, somente para jitter, desvio padrão e min/max do mesmo lote.
 
 ## Macros padrão
 
@@ -43,6 +45,7 @@ O External check mestre possui intervalo de atualização explícito de `1m`. Po
 | `{$ADV_FPING_INTERVAL_MS}` | `250` | Intervalo entre sondagens, em milissegundos. |
 | `{$ADV_FPING_TIMEOUT_MS}` | `250` | Timeout de cada sondagem, em milissegundos. |
 | `{$ADV_ICMP_LOSS_WARN}` | `20` | Limite de alerta de perda de pacotes, em %. |
+| `{$ADV_ICMP_STATS_INTERVAL}` | `5m` | Intervalo do coletor externo de estatísticas avançadas. |
 | `{$ADV_ICMP_JITTER_WARN}` | `20` | Limite de alerta de jitter, em ms. |
 | `{$ADV_ICMP_RESPONSE_TIME_WARN}` | `200` | Limite de alerta para latência média, em ms. |
 | `{$ADV_ICMP_MAX_TIME_MULTIPLE}` | `30` | Limite para a relação entre RTT máximo e mínimo. |

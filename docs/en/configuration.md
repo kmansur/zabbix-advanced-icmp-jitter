@@ -43,6 +43,7 @@ The master External check has an explicit update interval of `1m`. Therefore, co
 | `{$ADV_FPING_INTERVAL_MS}` | `250` | Interval between probes, in milliseconds. |
 | `{$ADV_FPING_TIMEOUT_MS}` | `250` | Per-probe timeout, in milliseconds. |
 | `{$ADV_ICMP_LOSS_WARN}` | `20` | Packet loss warning threshold, in %. |
+| `{$ADV_ICMP_STATS_INTERVAL}` | `5m` | Advanced external statistics collection interval. |
 | `{$ADV_ICMP_JITTER_WARN}` | `20` | Jitter warning threshold, in ms. |
 | `{$ADV_ICMP_RESPONSE_TIME_WARN}` | `200` | Average latency warning threshold, in ms. |
 | `{$ADV_ICMP_MAX_TIME_MULTIPLE}` | `30` | Threshold for the max/min RTT ratio. |

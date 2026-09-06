@@ -1,23 +1,29 @@
-# Deployment modes
+# Deployment architecture
 
-[English](deployment-modes.md) | [Português (Brasil)](../pt-BR/deployment-modes.md)
+**English** | [Português (Brasil)](../pt-BR/deployment-modes.md)
 
-The project provides two complementary monitoring modes.
+The project ships **one hybrid template**: `Advanced ICMP Ping with Jitter`.
 
-## Advanced ICMP Ping — native, scalable default
+## Primary path — native and scalable
 
-Use `advanced-icmp-ping.yaml` for broad deployment. It uses Zabbix `SIMPLE` checks:
+Every minute Zabbix uses its native `SIMPLE` checks:
 
-- `icmpping` for reachability;
+- `icmpping` for availability;
 - `icmppingloss` for packet loss;
 - `icmppingsec` in `avg` mode for average RTT.
 
-All three run through the Zabbix server/proxy ICMP pinger. Targets with identical parameters can be grouped and checked by `fping` in parallel, avoiding a Python process per monitored host. The default update interval is one minute, with short unavailability at about 3 minutes and long unavailability at about 30 minutes.
+These checks are handled by the Zabbix server/proxy ICMP pingers. Targets with compatible parameters can be grouped through `fping`, so the monitoring path that determines state, loss and average latency does not start one Python process per host.
 
-## Advanced ICMP Ping with Jitter — selective advanced statistics
+## Advanced statistics — integrated in the same template
 
-Use `advanced-icmp-ping-with-jitter.yaml` where you need individual RTT samples, jitter, population standard deviation, or min/max from the same packet batch. Its master item is an `EXTERNAL` check: the Zabbix server/proxy starts the Python collector, which starts `fping`, for each linked host and collection cycle.
+The same template retains one lower-frequency `EXTERNAL` item controlled by `{$ADV_ICMP_STATS_INTERVAL}` (default `5m`). It is used only for metrics the native ICMP pinger does not expose from the individual RTTs of the same packet batch:
 
-Typical selective targets include WAN gateways, site-to-site links, firewalls, edge routers, voice/video paths, and links under troubleshooting.
+- packet-to-packet jitter;
+- RTT standard deviation;
+- minimum and maximum RTT from the same sample batch.
 
-Do not link both templates to the same host unless you intentionally want both native baseline monitoring and the additional external statistical workload.
+If the advanced collector fails, `Collector error` alerts while availability, packet loss and average RTT continue through the native ICMP path and do not depend on Python.
+
+## Scale
+
+For larger deployments, keep the native core at `1m` and increase only `{$ADV_ICMP_STATS_INTERVAL}` to `10m` or `15m` when advanced statistics do not require high frequency. Device-state sensitivity remains around three minutes while external-check load can be reduced independently.

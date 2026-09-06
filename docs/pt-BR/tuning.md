@@ -66,15 +66,15 @@ O timeout real do processo Python inclui uma margem adicional sobre o tempo espe
 
 ## Escala do ambiente
 
-Para monitoramento amplo de disponibilidade ICMP, perda e RTT médio, prefira o template nativo `Advanced ICMP Ping`. O Zabbix consegue agrupar alvos que compartilham parâmetros ICMP idênticos nos processos dedicados de pinger. Reserve `Advanced ICMP Ping with Jitter` para caminhos selecionados onde jitter e desvio padrão de RTT justifiquem um coletor externo por host.
+O template é híbrido e único. Disponibilidade, perda e RTT médio usam o ICMP pinger nativo a cada `1m`; jitter, desvio padrão e min/max do mesmo lote usam o coletor externo em `{$ADV_ICMP_STATS_INTERVAL}` (padrão `5m`).
 
-Em servidores ou proxies que monitoram muitos hosts com o template de jitter:
+Para aumentar a escala sem perder sensibilidade de estado:
 
-- evite intervalos extremamente baixos;
-- considere distribuir coleta entre proxies;
-- acompanhe utilização dos pollers de external checks;
-- aumente `POOL_COUNT` somente quando o ganho de precisão justificar o custo;
-- prefira janelas de média nos triggers em vez de alertar por uma única amostra.
+- mantenha o caminho nativo em `1m`;
+- aumente `{$ADV_ICMP_STATS_INTERVAL}` para `10m` ou `15m` quando a estatística avançada puder ser menos frequente;
+- distribua hosts entre proxies quando necessário;
+- acompanhe utilização de ICMP pingers e pollers de external checks;
+- aumente `POOL_COUNT` somente quando o ganho estatístico justificar o custo.
 
 ## Ajuste de triggers
 
@@ -89,4 +89,4 @@ O trigger de desvio padrão fica desabilitado por padrão para evitar ruído em 
 
 ## Retenção
 
-O template nativo usa por padrão 30 dias de histórico bruto. O template de jitter atualmente mantém 90 dias para métricas numéricas e 1 hora para o JSON bruto. Reduza o histórico bruto quando a escala do banco for mais importante que análise forense em alta resolução; trends numéricos preservam o comportamento de longo prazo com custo muito menor.
+Os itens numéricos do template usam por padrão 30 dias de histórico e o JSON bruto do coletor avançado mantém 1 hora. Ajuste a retenção conforme a escala do banco e a necessidade de análise forense.

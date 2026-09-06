@@ -66,15 +66,15 @@ The actual Python process timeout includes additional margin over the expected `
 
 ## Environment scale
 
-For broad ICMP availability, packet-loss and average-RTT monitoring, prefer the `Advanced ICMP Ping` native template. Zabbix can batch targets that share identical ICMP parameters through dedicated pinger processes. Reserve `Advanced ICMP Ping with Jitter` for selected paths where jitter and RTT standard deviation justify a per-host external collector.
+The project ships one hybrid template. Availability, loss and average RTT use the native ICMP pinger every `1m`; packet-level jitter, standard deviation and same-batch min/max use the external collector at `{$ADV_ICMP_STATS_INTERVAL}` (default `5m`).
 
-On servers or proxies monitoring many hosts with the jitter template:
+To scale without losing device-state sensitivity:
 
-- avoid extremely low intervals;
-- consider distributing collection across proxies;
-- monitor external-check poller utilization;
-- increase `POOL_COUNT` only when the precision gain justifies the cost;
-- prefer average windows in triggers instead of alerting on a single sample.
+- keep the native path at `1m`;
+- increase `{$ADV_ICMP_STATS_INTERVAL}` to `10m` or `15m` when advanced statistics may run less frequently;
+- distribute hosts across proxies when needed;
+- monitor ICMP pinger and external-check poller utilization;
+- increase `POOL_COUNT` only when the statistical benefit justifies the cost.
 
 ## Trigger tuning
 
@@ -89,4 +89,4 @@ The standard deviation trigger is disabled by default to avoid noise in environm
 
 ## Retention
 
-The native template defaults to 30 days of raw history. The jitter template currently keeps 90 days for numeric metrics and 1 hour for raw JSON. Reduce raw history where database scale is more important than high-resolution forensic analysis; numeric trends preserve long-term behavior at much lower storage cost.
+Numeric items keep 30 days of history by default and the advanced raw JSON keeps one hour. Tune retention according to database scale and forensic requirements.
