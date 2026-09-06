@@ -67,7 +67,7 @@ jobs:
             root="dist/${package}"
             mkdir -p "$root/scripts" "$root/templates/zabbix-${zabbix_version}"
             cp scripts/advanced_icmp_ping.py "$root/scripts/"
-            cp templates/zabbix-${zabbix_version}/advanced-icmp-ping-with-jitter.yaml \
+            cp templates/zabbix-${zabbix_version}/*.yaml \
                "$root/templates/zabbix-${zabbix_version}/"
             cp -r docs "$root/"
             cp README.md README.pt-BR.md \
