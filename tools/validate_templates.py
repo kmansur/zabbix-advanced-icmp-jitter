@@ -339,6 +339,14 @@ def validate_trigger_policy(exports):
             not in packet_loss["expression"]
         ):
             fail(f"Zabbix {version}: packet loss trigger must evaluate both latest samples")
+        if (
+            "min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0"
+            not in packet_loss["expression"]
+        ):
+            fail(
+                f"Zabbix {version}: packet loss trigger must require received packets "
+                "in both latest samples"
+            )
 
         for trigger in triggers.values():
             if (

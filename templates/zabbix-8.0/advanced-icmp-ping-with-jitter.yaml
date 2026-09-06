@@ -50,8 +50,7 @@ zabbix_export:
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: min(/Advanced ICMP Ping with 
-            Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+          expression: min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
           expression: max(/Advanced ICMP Ping with 
             Jitter/advanced.ping.rcv,#3)=0
@@ -119,8 +118,7 @@ zabbix_export:
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: min(/Advanced ICMP Ping with 
-            Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+          expression: min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
           expression: max(/Advanced ICMP Ping with 
             Jitter/advanced.ping.rcv,#3)=0
@@ -148,8 +146,7 @@ zabbix_export:
         value: network
       triggers:
       - uuid: bb58843328ad49e6a9ac912dc5941998
-        expression: min(/Advanced ICMP Ping with 
-          Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+        expression: min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
         name: 'Advanced ICMP: High packet loss'
         opdata: 'Last value: {ITEM.LASTVALUE1} %'
         priority: WARNING
@@ -271,8 +268,7 @@ zabbix_export:
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: min(/Advanced ICMP Ping with 
-            Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+          expression: min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
           expression: max(/Advanced ICMP Ping with 
             Jitter/advanced.ping.rcv,#3)=0

@@ -45,10 +45,10 @@ Both triggers recover automatically when the expression becomes false and replie
 ## Packet loss
 
 ```text
-min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
 ```
 
-The threshold is controlled by `{$ADV_ICMP_LOSS_WARN}`.
+The threshold is controlled by `{$ADV_ICMP_LOSS_WARN}`. The trigger represents degraded connectivity only while both evaluated batches still receive at least one ICMP reply. Complete loss (`rcv=0`) is handled by the unavailability triggers instead.
 
 ## High average latency
 

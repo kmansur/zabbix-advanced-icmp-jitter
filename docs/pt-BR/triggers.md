@@ -45,10 +45,10 @@ Ambos recuperam automaticamente quando a expressão volta a ser falsa e novas re
 ## Perda de pacotes
 
 ```text
-min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN} and min(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#2)>0
 ```
 
-O limite é controlado por `{$ADV_ICMP_LOSS_WARN}`.
+O limite é controlado por `{$ADV_ICMP_LOSS_WARN}`. O trigger representa degradação de conectividade somente quando os dois lotes avaliados ainda recebem pelo menos uma resposta ICMP. Perda total (`rcv=0`) é tratada pelos triggers de indisponibilidade.
 
 ## Latência média alta
 
