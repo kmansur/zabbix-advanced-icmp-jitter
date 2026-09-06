@@ -1,0 +1,38 @@
+name: Repair approved hardening workflow
+
+on:
+  push:
+    branches:
+      - hardening/professionalization
+    paths:
+      - .github/workflows/_fix-approved-workflow.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: hardening/professionalization
+      - name: Fix validation order and remove this helper
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('.github/workflows/_apply-approved-hardening.yml')
+          text = path.read_text(encoding='utf-8')
+          old = '          ruff format scripts tools tests\n          python tools/validate_templates.py\n'
+          new = '          ruff format scripts tools tests\n          ruff check --fix scripts tools tests\n          python tools/validate_templates.py\n'
+          if old not in text:
+              raise SystemExit('validation block not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          Path('.github/workflows/_fix-approved-workflow.yml').unlink()
+      - name: Commit repair
+        run: |
+          git config user.name "Karim Mansur"
+          git config user.email "karim.mansur@outlook.com"
+          git add -A
+          git commit -m "chore: fix approved-hardening validation order"
+          git push origin HEAD:hardening/professionalization
