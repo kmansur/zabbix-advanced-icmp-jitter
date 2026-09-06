@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.14"
       - run: python -m pip install -r requirements-dev.txt
-      - name: Remove nested dependency metadata and harden validator
+      - name: Remove nested dependency metadata
         shell: python
         run: |
           from pathlib import Path
@@ -53,18 +53,8 @@ jobs:
                   yaml.dump(data, Dumper=NoAliasDumper, sort_keys=False, allow_unicode=True, width=1000),
                   encoding="utf-8",
               )
-
-          validator = Path("tools/validate_templates.py")
-          text = validator.read_text(encoding="utf-8")
-          needle = '''              triggers = collect_triggers(data)\n              by_name = {trigger["name"]: trigger for trigger in triggers}\n'''
-          replacement = '''              triggers = collect_triggers(data)\n              for trigger in triggers:\n                  for dependency in trigger.get("dependencies", []):\n                      if "dependencies" in dependency:\n                          fail(f"Zabbix {version}: nested trigger dependency metadata is not allowed")\n              by_name = {trigger["name"]: trigger for trigger in triggers}\n'''
-          if needle not in text:
-              raise SystemExit("validator insertion point not found")
-          validator.write_text(text.replace(needle, replacement, 1), encoding="utf-8")
       - name: Validate
         run: |
-          ruff format tools/validate_templates.py
-          ruff check --fix tools/validate_templates.py
           python tools/validate_templates.py
           python tools/validate_docs.py
           ruff check scripts tools tests
