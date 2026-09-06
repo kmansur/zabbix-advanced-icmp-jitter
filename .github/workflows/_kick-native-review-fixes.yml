@@ -1,0 +1,48 @@
+name: Repair native ICMP review workflow
+
+on:
+  push:
+    branches:
+      - hardening/professionalization
+    paths:
+      - .github/workflows/_kick-native-review-fixes.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: hardening/professionalization
+      - name: Patch one-shot workflow
+        shell: python
+        run: |
+          from pathlib import Path
+
+          target = Path('.github/workflows/_apply-native-review-fixes.yml')
+          text = target.read_text(encoding='utf-8')
+          old = '''          python -m compileall -q scripts tools tests
+          ruff check scripts tools tests
+          ruff format --check scripts tools tests
+'''
+          new = '''          python -m compileall -q scripts tools tests
+          ruff format scripts tools tests
+          ruff check scripts tools tests
+          ruff format --check scripts tools tests
+'''
+          if old not in text:
+              raise SystemExit('validation block not found')
+          target.write_text(text.replace(old, new, 1), encoding='utf-8')
+          Path('.github/workflows/_kick-native-review-fixes.yml').unlink()
+      - name: Commit repair
+        run: |
+          git config user.name "Karim Mansur"
+          git config user.email "karim.mansur@outlook.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "chore: fix one-shot review validation"
+          git push origin HEAD:hardening/professionalization
