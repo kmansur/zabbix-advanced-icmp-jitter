@@ -30,6 +30,7 @@ O coletor executa um único lote de `fping -C`, interpreta cada amostra de RTT e
 ## Documentação
 
 - [Instalação](installation.md)
+- [Atualização a partir do AdvancedPING legado](legacy-advancedping-upgrade.md)
 - [Configuração e macros](configuration.md)
 - [Métricas e dashboard](metrics.md)
 - [Triggers](triggers.md)
