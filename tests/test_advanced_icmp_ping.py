@@ -65,6 +65,13 @@ def test_stats_with_partial_loss():
     assert result["rtts"] == [10.0, 12.0, 14.0]
 
 
+def test_stats_preserves_fractional_packet_loss():
+    result = advanced_icmp_ping.stats([10.0, None, 12.0, 14.0, None, 16.0, 18.0])
+
+    assert result["loss"] == 28.571
+    assert isinstance(result["loss"], float)
+
+
 def test_stats_with_total_loss():
     result = advanced_icmp_ping.stats([None, None, None, None])
 
@@ -90,16 +97,47 @@ def test_parse_int_defaults_and_clamps():
     assert advanced_icmp_ping.parse_int("30", 20, 2, 100) == 30
 
 
+def test_target_validation():
+    assert advanced_icmp_ping.validate_target("8.8.8.8") == ""
+    assert advanced_icmp_ping.validate_target("2001:db8::1") == ""
+    assert advanced_icmp_ping.validate_target("host-name.example") == ""
+    assert advanced_icmp_ping.validate_target("-v") == "target must not start with '-'"
+    assert "whitespace" in advanced_icmp_ping.validate_target("bad host")
+    assert "too long" in advanced_icmp_ping.validate_target("a" * 254)
+
+
+def test_probe_config_rejects_timeout_larger_than_period():
+    error = advanced_icmp_ping.validate_probe_config(20, 100, 1000)
+    assert "timeout must not exceed probe interval" in error
+
+
+def test_probe_config_rejects_runtime_over_budget():
+    error = advanced_icmp_ping.validate_probe_config(100, 250, 250)
+    assert "exceeds collector runtime budget" in error
+
+
+def test_probe_config_accepts_default_profile():
+    assert (
+        advanced_icmp_ping.validate_probe_config(
+            advanced_icmp_ping.DEFAULT_COUNT,
+            advanced_icmp_ping.DEFAULT_INTERVAL_MS,
+            advanced_icmp_ping.DEFAULT_TIMEOUT_MS,
+        )
+        == ""
+    )
+
+
 def test_main_returns_expected_json(monkeypatch, capsys):
     class Completed:
         stdout = ""
         stderr = "8.8.8.8 : 10.0 12.0 11.0 13.0\n"
+        returncode = 0
 
     monkeypatch.setattr(advanced_icmp_ping.subprocess, "run", lambda *args, **kwargs: Completed())
     monkeypatch.setattr(
         advanced_icmp_ping.sys,
         "argv",
-        ["advanced_icmp_ping.py", "8.8.8.8", "4", "100", "1000"],
+        ["advanced_icmp_ping.py", "8.8.8.8", "4", "250", "250"],
     )
 
     advanced_icmp_ping.main()
@@ -110,6 +148,62 @@ def test_main_returns_expected_json(monkeypatch, capsys):
     assert result["rcv"] == 4
     assert result["loss"] == 0.0
     assert result["jitter"] == 1.667
+
+
+def test_main_uses_safe_defaults_and_c_locale(monkeypatch, capsys):
+    captured = {}
+
+    class Completed:
+        stdout = ""
+        stderr = ""
+        returncode = 0
+
+    def fake_run(command, **kwargs):
+        captured["command"] = command
+        captured["kwargs"] = kwargs
+        return Completed()
+
+    monkeypatch.setattr(advanced_icmp_ping.subprocess, "run", fake_run)
+    monkeypatch.setattr(
+        advanced_icmp_ping,
+        "parse_fping_output",
+        lambda output, expected_count=None: [1.0] * expected_count,
+    )
+    monkeypatch.setattr(advanced_icmp_ping.sys, "argv", ["advanced_icmp_ping.py", "127.0.0.1"])
+
+    advanced_icmp_ping.main()
+    result = json.loads(capsys.readouterr().out)
+
+    assert captured["command"] == [
+        "fping",
+        "-q",
+        "-C",
+        "20",
+        "-p",
+        "250",
+        "-t",
+        "250",
+        "127.0.0.1",
+    ]
+    assert captured["kwargs"]["env"]["LC_ALL"] == "C"
+    assert captured["kwargs"]["env"]["LANG"] == "C"
+    assert captured["kwargs"]["timeout"] < 30
+    assert result["xmt"] == 20
+
+
+def test_main_rejects_unsafe_timing_before_fping(monkeypatch, capsys):
+    monkeypatch.setattr(
+        advanced_icmp_ping.sys,
+        "argv",
+        ["advanced_icmp_ping.py", "8.8.8.8", "20", "100", "1000"],
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        advanced_icmp_ping.main()
+
+    assert excinfo.value.code == 0
+    result = json.loads(capsys.readouterr().out)
+    assert "timeout must not exceed probe interval" in result["error"]
 
 
 def test_main_returns_json_when_fping_is_missing(monkeypatch, capsys):
@@ -126,3 +220,51 @@ def test_main_returns_json_when_fping_is_missing(monkeypatch, capsys):
     result = json.loads(capsys.readouterr().out)
     assert result["error"] == "fping command not found"
     assert result["loss"] == 100
+
+
+def test_main_returns_json_on_permission_error(monkeypatch, capsys):
+    def raise_permission(*args, **kwargs):
+        raise PermissionError
+
+    monkeypatch.setattr(advanced_icmp_ping.subprocess, "run", raise_permission)
+    monkeypatch.setattr(advanced_icmp_ping.sys, "argv", ["advanced_icmp_ping.py", "8.8.8.8"])
+
+    with pytest.raises(SystemExit):
+        advanced_icmp_ping.main()
+
+    result = json.loads(capsys.readouterr().out)
+    assert result["error"] == "permission denied while executing fping"
+
+
+def test_main_returns_json_on_timeout(monkeypatch, capsys):
+    def raise_timeout(*args, **kwargs):
+        raise advanced_icmp_ping.subprocess.TimeoutExpired(cmd="fping", timeout=1)
+
+    monkeypatch.setattr(advanced_icmp_ping.subprocess, "run", raise_timeout)
+    monkeypatch.setattr(advanced_icmp_ping.sys, "argv", ["advanced_icmp_ping.py", "8.8.8.8"])
+
+    with pytest.raises(SystemExit):
+        advanced_icmp_ping.main()
+
+    result = json.loads(capsys.readouterr().out)
+    assert result["error"] == "fping command timed out"
+
+
+def test_main_translates_fping_resolution_error(monkeypatch, capsys):
+    class Completed:
+        stdout = ""
+        stderr = ""
+        returncode = 2
+
+    monkeypatch.setattr(advanced_icmp_ping.subprocess, "run", lambda *args, **kwargs: Completed())
+    monkeypatch.setattr(
+        advanced_icmp_ping.sys,
+        "argv",
+        ["advanced_icmp_ping.py", "invalid.example"],
+    )
+
+    with pytest.raises(SystemExit):
+        advanced_icmp_ping.main()
+
+    result = json.loads(capsys.readouterr().out)
+    assert result["error"] == "fping could not resolve target"

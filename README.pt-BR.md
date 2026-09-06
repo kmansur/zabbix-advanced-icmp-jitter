@@ -5,7 +5,9 @@
 
 [English](README.md) | **Português (Brasil)**
 
-Template Zabbix para monitoramento avançado de ICMP com latência, perda de pacotes, jitter e desvio padrão de RTT. Um único external check em Python executa `fping`, retorna JSON e alimenta itens dependentes do Zabbix usando o mesmo lote de sondagens.
+Template Zabbix híbrido para monitoramento ICMP em escala: disponibilidade, perda e RTT médio usam o pinger nativo do Zabbix a cada minuto, enquanto um coletor Python/fping de menor frequência acrescenta jitter, desvio padrão e min/max do mesmo lote de RTTs.
+
+A arquitetura usa **um único template** e mantém o caminho de disponibilidade independente do coletor externo.
 
 ## Compatibilidade
 
@@ -65,7 +67,7 @@ chmod +x /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py
 Teste como usuário Zabbix:
 
 ```sh
-sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 8.8.8.8 20 100 1000
+sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 8.8.8.8 20 250 250
 ```
 
 Depois importe o YAML correspondente à versão principal/secundária do Zabbix de destino.

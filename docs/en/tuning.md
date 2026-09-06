@@ -8,8 +8,8 @@ Ideal values depend on link characteristics, the number of monitored hosts, and 
 
 ```text
 {$ADV_FPING_POOL_COUNT}=20
-{$ADV_FPING_INTERVAL_MS}=100
-{$ADV_FPING_TIMEOUT_MS}=1000
+{$ADV_FPING_INTERVAL_MS}=250
+{$ADV_FPING_TIMEOUT_MS}=250
 {$ADV_ICMP_JITTER_WARN}=20
 ```
 
@@ -20,6 +20,7 @@ This is the project default profile and provides a good balance between batch du
 ```text
 {$ADV_FPING_POOL_COUNT}=20
 {$ADV_FPING_INTERVAL_MS}=50
+{$ADV_FPING_TIMEOUT_MS}=50
 {$ADV_ICMP_JITTER_WARN}=5
 {$ADV_ICMP_STDDEV_WARN}=10
 ```
@@ -31,6 +32,7 @@ Use lower thresholds only when the network actually has very low latency and var
 ```text
 {$ADV_FPING_POOL_COUNT}=20
 {$ADV_FPING_INTERVAL_MS}=100
+{$ADV_FPING_TIMEOUT_MS}=100
 {$ADV_ICMP_JITTER_WARN}=30
 {$ADV_ICMP_STDDEV_WARN}=50
 ```
@@ -40,6 +42,7 @@ Use lower thresholds only when the network actually has very low latency and var
 ```text
 {$ADV_FPING_POOL_COUNT}=30
 {$ADV_FPING_INTERVAL_MS}=50
+{$ADV_FPING_TIMEOUT_MS}=50
 {$ADV_ICMP_JITTER_WARN}=20
 {$ADV_ICMP_STDDEV_WARN}=30
 ```
@@ -63,13 +66,15 @@ The actual Python process timeout includes additional margin over the expected `
 
 ## Environment scale
 
-On servers or proxies monitoring many hosts:
+The project ships one hybrid template. Availability, loss and average RTT use the native ICMP pinger every `1m`; packet-level jitter, standard deviation and same-batch min/max use the external collector at `{$ADV_ICMP_STATS_INTERVAL}` (default `5m`).
 
-- avoid extremely low intervals;
-- consider distributing collection across proxies;
-- monitor external-check poller utilization;
-- increase `POOL_COUNT` only when the precision gain justifies the cost;
-- prefer average windows in triggers instead of alerting on a single sample.
+To scale without losing device-state sensitivity:
+
+- keep the native path at `1m`;
+- increase `{$ADV_ICMP_STATS_INTERVAL}` to `10m` or `15m` when advanced statistics may run less frequently;
+- distribute hosts across proxies when needed;
+- monitor ICMP pinger and external-check poller utilization;
+- increase `POOL_COUNT` only when the statistical benefit justifies the cost.
 
 ## Trigger tuning
 
@@ -81,3 +86,7 @@ Before lowering thresholds, observe normal network behavior for a few days. In p
 - `{$ADV_ICMP_STDDEV_WARN}` is most useful on links where stability matters as much as average latency.
 
 The standard deviation trigger is disabled by default to avoid noise in environments where the metric is only informational.
+
+## Retention
+
+Numeric items keep 30 days of history by default and the advanced raw JSON keeps one hour. Tune retention according to database scale and forensic requirements.

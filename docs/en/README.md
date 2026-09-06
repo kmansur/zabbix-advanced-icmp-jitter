@@ -29,7 +29,9 @@ The collector runs a single `fping -C` batch, parses each RTT sample, and return
 
 ## Documentation
 
+- [Deployment modes: native vs. jitter](deployment-modes.md)
 - [Installation](installation.md)
+- [Upgrading from legacy AdvancedPING](legacy-advancedping-upgrade.md)
 - [Configuration and macros](configuration.md)
 - [Metrics and dashboard](metrics.md)
 - [Triggers](triggers.md)

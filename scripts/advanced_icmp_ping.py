@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Advanced ICMP Ping with Jitter
-Version: 1.0.5
 
 Author: Karim Mansur
 Original inspiration: Advanced ICMP Ping by Dusan Priechodsky
@@ -22,32 +21,37 @@ Description:
 
         jitter = average(abs(current_rtt - previous_rtt))
 
-    This is more accurate for operational monitoring than estimating jitter
-    from "max - min", because it uses the packet-to-packet variation observed
-    inside the measurement window.
-
 Requirements:
-    - Python 3.6 or newer
+    - Python 3.9 or newer
     - fping installed and executable by the Zabbix server/proxy user
 
 Example:
-    ./advanced_icmp_ping.py 8.8.8.8 20 100 1000
+    ./advanced_icmp_ping.py 8.8.8.8 20 250 250
 """
 
 import json
 import math
+import os
 import re
 import subprocess
 import sys
 
+DEFAULT_COUNT = 20
+DEFAULT_INTERVAL_MS = 250
+DEFAULT_TIMEOUT_MS = 250
+MIN_COUNT = 2
+MAX_COUNT = 100
+MIN_INTERVAL_MS = 10
+MAX_INTERVAL_MS = 5000
+MIN_TIMEOUT_MS = 10
+MAX_TIMEOUT_MS = 5000
+PROCESS_MARGIN_MS = 2000
+MAX_PROCESS_RUNTIME_MS = 25000
+MAX_TARGET_LENGTH = 253
+
 
 def fail(message):
-    """Return valid JSON even when collection fails.
-
-    Zabbix dependent items expect JSONPath preprocessing to receive a JSON
-    object. Returning a stable error payload prevents malformed output from
-    breaking every dependent item in a noisy way.
-    """
+    """Return valid JSON even when collection fails."""
     print(
         json.dumps(
             {
@@ -69,12 +73,7 @@ def fail(message):
 
 
 def parse_int(value, default, minimum, maximum):
-    """Parse an integer CLI argument and clamp it to a safe range.
-
-    The template macros are user-editable, so this function keeps accidental
-    values such as empty strings, negative numbers, or very large counts from
-    producing slow or unsafe fping calls.
-    """
+    """Parse an integer CLI argument and clamp it to a safe range."""
     try:
         parsed = int(value)
     except (TypeError, ValueError):
@@ -82,33 +81,42 @@ def parse_int(value, default, minimum, maximum):
     return max(minimum, min(parsed, maximum))
 
 
+def validate_target(target):
+    """Return an error string for unsafe/invalid target text, otherwise empty."""
+    if not target:
+        return "target is empty"
+    if len(target) > MAX_TARGET_LENGTH:
+        return "target is too long"
+    if target.startswith("-"):
+        return "target must not start with '-'"
+    if any(character.isspace() or ord(character) < 32 for character in target):
+        return "target contains whitespace or control characters"
+    return ""
+
+
+def validate_probe_config(count, interval_ms, timeout_ms):
+    """Validate fping timing rules and keep the external check within its budget."""
+    if timeout_ms > interval_ms:
+        return (
+            "fping timeout must not exceed probe interval in count mode "
+            f"(timeout={timeout_ms}ms, interval={interval_ms}ms)"
+        )
+
+    estimated_runtime_ms = count * interval_ms + timeout_ms + PROCESS_MARGIN_MS
+    if estimated_runtime_ms > MAX_PROCESS_RUNTIME_MS:
+        return (
+            "configured probe window exceeds collector runtime budget "
+            f"({estimated_runtime_ms}ms > {MAX_PROCESS_RUNTIME_MS}ms)"
+        )
+
+    return ""
+
+
 def parse_fping_output(output, expected_count=None):
-    """Extract RTT samples from fping "-q -C" output.
-
-    fping usually writes summary output to stderr, not stdout. The caller joins
-    both streams and this parser scans every line looking for the compact sample
-    list produced by "-C":
-
-        8.8.8.8 : 10.1 10.3 - 11.0
-        2001:db8::1 : 10.1 10.3 - 11.0
-
-    A dash means the packet was transmitted but no reply was received. It is
-    stored as None so packet loss can be calculated without pretending the RTT
-    was zero.
-
-    Some fping builds or manual tests may include verbose lines. To avoid
-    parsing those by accident, a valid sample line must contain only numeric RTT
-    values or "-". The split is done from the right side using " : " so IPv6
-    target addresses are not broken by their internal colons. When the expected
-    probe count is known, the parser prefers a candidate line with exactly that
-    number of samples.
-    """
+    """Extract RTT samples from fping "-q -C" output."""
     candidates = []
 
     for line in output.splitlines():
-        if ":" not in line:
-            continue
-
         if " : " not in line:
             continue
 
@@ -147,29 +155,12 @@ def parse_fping_output(output, expected_count=None):
 
 
 def rounded(value):
-    """Round monitoring values to milliseconds with microsecond-style detail."""
+    """Round monitoring values to three decimal places."""
     return round(value, 3)
 
 
 def stats(samples):
-    """Calculate packet and latency statistics from parsed RTT samples.
-
-    The input list contains floats for received replies and None for lost
-    packets. Lost packets are included in xmt/loss, but excluded from latency,
-    jitter, and standard deviation calculations because there is no RTT value to
-    measure.
-
-    Returned fields:
-        xmt     - transmitted packet count
-        rcv     - received packet count
-        loss    - packet loss percentage
-        min     - minimum received RTT in milliseconds
-        avg     - average received RTT in milliseconds
-        max     - maximum received RTT in milliseconds
-        jitter  - average absolute delta between consecutive received RTTs
-        stddev  - population standard deviation of received RTTs
-        rtts    - received RTT samples, useful for troubleshooting
-    """
+    """Calculate packet and latency statistics from parsed RTT samples."""
     received = [sample for sample in samples if sample is not None]
     xmt = len(samples)
     rcv = len(received)
@@ -208,21 +199,49 @@ def stats(samples):
     }
 
 
+def fping_error_message(returncode):
+    """Translate documented fping exit codes into stable collector messages."""
+    messages = {
+        2: "fping could not resolve target",
+        3: "fping rejected command-line arguments",
+        4: "fping reported a system call failure",
+    }
+    return messages.get(returncode, f"fping failed with exit status {returncode}")
+
+
 def main():
     """Read arguments, execute fping, parse output, and print JSON for Zabbix."""
     if len(sys.argv) < 2:
         fail("missing host argument")
 
-    # Arguments are intentionally positional because Zabbix external item keys
-    # pass macro values as simple script parameters.
     host = sys.argv[1]
-    count = parse_int(sys.argv[2] if len(sys.argv) > 2 else None, 10, 2, 100)
-    interval_ms = parse_int(sys.argv[3] if len(sys.argv) > 3 else None, 200, 20, 60000)
-    timeout_ms = parse_int(sys.argv[4] if len(sys.argv) > 4 else None, 1000, 50, 60000)
+    target_error = validate_target(host)
+    if target_error:
+        fail(target_error)
 
-    # -q keeps the output compact.
-    # -C prints one RTT value per probe, which is required for precise jitter.
-    # -p controls spacing between probes, and -t controls per-probe timeout.
+    count = parse_int(
+        sys.argv[2] if len(sys.argv) > 2 else None,
+        DEFAULT_COUNT,
+        MIN_COUNT,
+        MAX_COUNT,
+    )
+    interval_ms = parse_int(
+        sys.argv[3] if len(sys.argv) > 3 else None,
+        DEFAULT_INTERVAL_MS,
+        MIN_INTERVAL_MS,
+        MAX_INTERVAL_MS,
+    )
+    timeout_ms = parse_int(
+        sys.argv[4] if len(sys.argv) > 4 else None,
+        DEFAULT_TIMEOUT_MS,
+        MIN_TIMEOUT_MS,
+        MAX_TIMEOUT_MS,
+    )
+
+    config_error = validate_probe_config(count, interval_ms, timeout_ms)
+    if config_error:
+        fail(config_error)
+
     command = [
         "fping",
         "-q",
@@ -235,20 +254,31 @@ def main():
         host,
     ]
 
+    environment = os.environ.copy()
+    environment["LC_ALL"] = "C"
+    environment["LANG"] = "C"
+    process_timeout = (count * interval_ms + timeout_ms + PROCESS_MARGIN_MS) / 1000
+
     try:
-        # The Python timeout is slightly larger than the expected fping runtime.
-        # It prevents a stuck fping process from tying up the Zabbix poller.
         completed = subprocess.run(
             command,
             check=False,
             capture_output=True,
             text=True,
-            timeout=((count * interval_ms) + timeout_ms + 5000) / 1000,
+            timeout=process_timeout,
+            env=environment,
         )
     except FileNotFoundError:
         fail("fping command not found")
+    except PermissionError:
+        fail("permission denied while executing fping")
     except subprocess.TimeoutExpired:
         fail("fping command timed out")
+    except OSError as exc:
+        fail(f"unable to execute fping: {exc.strerror or exc.__class__.__name__}")
+
+    if completed.returncode >= 2:
+        fail(fping_error_message(completed.returncode))
 
     output = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
     samples = parse_fping_output(output, count)

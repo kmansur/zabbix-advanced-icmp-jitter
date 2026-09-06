@@ -5,12 +5,18 @@
 ## Requirements
 
 - Zabbix Server or Zabbix Proxy compatible with one of the maintained exports;
-- Python 3 available on the server/proxy that will execute the external check;
+- Python 3.9 or newer on the server/proxy that will execute the external check;
 - `fping` installed;
 - `ExternalScripts` configured or the installation default path in use;
 - the Zabbix process user must be allowed to execute `fping` and the collector.
 
-The collector remains compatible with Python 3.6+; project CI tests current Python versions to prevent regressions in maintained code.
+Project CI tests Python 3.9 and current Python releases to prevent regressions in the maintained collector.
+
+## Choose the deployment mode
+
+For most hosts, import and use `advanced-icmp-ping.yaml`. It needs `fping` on the Zabbix server/proxy but does not require the Python external collector. Use `advanced-icmp-ping-with-jitter.yaml` only for selected targets that need jitter or RTT standard deviation.
+
+The jitter template executes the `EXTERNAL` master item on the Zabbix server/proxy, not on the monitored host. Each linked host therefore starts one Python/`fping` collector execution per collection cycle.
 
 ## Installing dependencies
 
@@ -67,7 +73,7 @@ Common paths include:
 Whenever possible, test using the same account that runs Zabbix:
 
 ```sh
-sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 8.8.8.8 20 100 1000
+sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 8.8.8.8 20 250 250
 ```
 
 Example of valid output:
@@ -81,6 +87,8 @@ If collection fails, the script still returns valid JSON so dependent items do n
 ```json
 {"error":"fping command not found","xmt":0,"rcv":0,"loss":100,"min":0,"avg":0,"max":0,"jitter":0,"stddev":0,"rtts":[]}
 ```
+
+The maintained 1.1.0 candidate enforces `timeout <= interval` in `fping` count mode and rejects probe configurations whose estimated runtime exceeds the collector safety budget.
 
 ## Importing the template
 
@@ -102,12 +110,16 @@ templates/zabbix-8.0/advanced-icmp-ping-with-jitter.yaml
 
 The 8.0 export was tested on **Zabbix 8.0 Beta 2** and will be revalidated as new builds are tested.
 
+### Migrating from legacy AdvancedPING
+
+If the host previously used the original AdvancedPING template or an older derivative, review the [legacy AdvancedPING upgrade guide](legacy-advancedping-upgrade.md) before removing or linking templates. In particular, Zabbix **Unlink** preserves inherited entities on the host, while **Unlink and clear** removes them; legacy local triggers can otherwise coexist with the maintained `Advanced ICMP:` triggers.
+
 ## IPv6 test
 
 The collector accepts addresses supported by the installed `fping`. For IPv6:
 
 ```sh
-sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 2001:4860:4860::8888 20 100 1000
+sudo -u zabbix /usr/lib/zabbix/externalscripts/advanced_icmp_ping.py 2001:4860:4860::8888 20 250 250
 ```
 
 The server/proxy must have IPv6 connectivity and the installed `fping` must provide appropriate IPv6 support.
