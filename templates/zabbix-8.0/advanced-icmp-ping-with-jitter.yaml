@@ -7,7 +7,8 @@ zabbix_export:
   - uuid: afac17c2c17e443cbf0af2ae2963bede
     template: Advanced ICMP Ping with Jitter
     name: Advanced ICMP Ping with Jitter
-    description: 'Module Advanced ICMP Ping with Jitter based on AdvancedPING by Dusan Priechodsky.
+    description: 'Module Advanced ICMP Ping with Jitter based on AdvancedPING by Dusan
+      Priechodsky.
 
 
       Original project: https://github.com/priechodsky/AdvancedPING
@@ -19,7 +20,7 @@ zabbix_export:
       '
     vendor:
       name: Net Tech
-      version: 1.0-10
+      version: 1.1.0
     groups:
     - name: Templates/Modules
     items:
@@ -35,45 +36,61 @@ zabbix_export:
         parameters:
         - $.avg
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
-      - tag: application
-        value: status
+      - tag: component
+        value: network
       triggers:
       - uuid: f751fa9758054945915c723f0239f4e2
-        expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.avg,5m)>{$ADV_ICMP_RESPONSE_TIME_WARN}
+        expression: avg(/Advanced ICMP Ping with 
+          Jitter/advanced.ping.avg,5m)>{$ADV_ICMP_RESPONSE_TIME_WARN}
         name: 'Advanced ICMP: High response time'
         opdata: 'Last value: {ITEM.LASTVALUE1}'
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+          expression: min(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
-          expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
+          expression: max(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.rcv,#3)=0
+        - name: 'Advanced ICMP: Collector error'
+          expression: last(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.error)<>""
+        tags:
+        - tag: scope
+          value: performance
     - uuid: 27e61fa62b8c405da36588bd5c24b379
       name: 'Advanced ICMP: collector error'
       type: DEPENDENT
       key: advanced.ping.error
       history: 90d
       value_type: TEXT
-      description: Error message returned by the ICMP collector. Empty when collection succeeds.
+      description: Error message returned by the ICMP collector. Empty when 
+        collection succeeds.
       preprocessing:
       - type: JSONPATH
         parameters:
         - $.error
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
       - tag: component
-        value: health
-      - tag: component
         value: network
+      - tag: component
+        value: system
       triggers:
       - uuid: 433ce45731234c51aa71cb0e2f9d3a38
-        expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
+        expression: last(/Advanced ICMP Ping with 
+          Jitter/advanced.ping.error)<>""
         name: 'Advanced ICMP: Collector error'
         opdata: 'Last error: {ITEM.LASTVALUE1}'
         priority: WARNING
+        tags:
+        - tag: scope
+          value: availability
     - uuid: 7bcb6943d5eb46b692dcf31e88fa3938
       name: 'Advanced ICMP: jitter'
       type: DEPENDENT
@@ -81,29 +98,38 @@ zabbix_export:
       history: 90d
       value_type: FLOAT
       units: ms
-      description: ICMP jitter calculated from individual fping RTT samples as the average absolute difference between consecutive received packets.
+      description: ICMP jitter calculated from individual fping RTT samples as 
+        the average absolute difference between consecutive received packets.
       preprocessing:
       - type: JSONPATH
         parameters:
         - $.jitter
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
-      - tag: component
-        value: health
       - tag: component
         value: network
       triggers:
       - uuid: 9a9d437b891c4763a44dfe3f9505e7da
-        expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.jitter,5m)>{$ADV_ICMP_JITTER_WARN}
+        expression: avg(/Advanced ICMP Ping with 
+          Jitter/advanced.ping.jitter,5m)>{$ADV_ICMP_JITTER_WARN}
         name: 'Advanced ICMP: High jitter'
         opdata: 'Last value: {ITEM.LASTVALUE1}'
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+          expression: min(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
-          expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
+          expression: max(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.rcv,#3)=0
+        - name: 'Advanced ICMP: Collector error'
+          expression: last(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.error)<>""
+        tags:
+        - tag: scope
+          value: performance
     - uuid: eb3e547aeda94ba999b0e84f78c9bfb7
       name: 'Advanced ICMP: packet loss'
       type: DEPENDENT
@@ -115,19 +141,30 @@ zabbix_export:
         parameters:
         - $.loss
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
-      - tag: application
-        value: status
+      - tag: component
+        value: network
       triggers:
       - uuid: bb58843328ad49e6a9ac912dc5941998
-        expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+        expression: min(/Advanced ICMP Ping with 
+          Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
         name: 'Advanced ICMP: High packet loss'
         opdata: 'Last value: {ITEM.LASTVALUE1} %'
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
-          expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
+          expression: max(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.rcv,#3)=0
+        - name: 'Advanced ICMP: Collector error'
+          expression: last(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.error)<>""
+        tags:
+        - tag: scope
+          value: availability
+        - tag: scope
+          value: performance
     - uuid: 982689cec232435fb57158b5f617ca3f
       name: 'Advanced ICMP: maximum response time'
       type: DEPENDENT
@@ -140,10 +177,11 @@ zabbix_export:
         parameters:
         - $.max
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
-      - tag: application
-        value: status
+      - tag: component
+        value: network
     - uuid: 2c67d51b3fb64d2288bf6dd7ad6d55d7
       name: 'Advanced ICMP: minimum response time'
       type: DEPENDENT
@@ -156,10 +194,11 @@ zabbix_export:
         parameters:
         - $.min
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
-      - tag: application
-        value: status
+      - tag: component
+        value: network
     - uuid: 1670e4d8e9054effa23a6b598e325caa
       name: 'Advanced ICMP: packets received'
       type: DEPENDENT
@@ -170,24 +209,39 @@ zabbix_export:
         parameters:
         - $.rcv
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
-      - tag: application
-        value: status
+      - tag: component
+        value: network
       triggers:
       - uuid: e80be54fd2174e84b64ec3a9261864d9
         expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0
         name: 'Advanced ICMP: Long unavailable by ICMP ping'
         opdata: 'Last value: {ITEM.LASTVALUE1}'
-        priority: DISASTER
+        priority: HIGH
+        dependencies:
+        - name: 'Advanced ICMP: Collector error'
+          expression: last(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.error)<>""
+        tags:
+        - tag: scope
+          value: availability
       - uuid: 060dd4f74b0a4f83aa75b27623050c0a
         expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
         name: 'Advanced ICMP: Unavailable by ICMP ping'
         opdata: 'Last value: {ITEM.LASTVALUE1}'
-        priority: HIGH
+        priority: AVERAGE
         dependencies:
         - name: 'Advanced ICMP: Long unavailable by ICMP ping'
-          expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#30)=0
+          expression: max(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.rcv,#30)=0
+        - name: 'Advanced ICMP: Collector error'
+          expression: last(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.error)<>""
+        tags:
+        - tag: scope
+          value: availability
     - uuid: 9d983174608b4f3db4d0960aff79ed6d
       name: 'Advanced ICMP: RTT standard deviation'
       type: DEPENDENT
@@ -195,30 +249,39 @@ zabbix_export:
       history: 90d
       value_type: FLOAT
       units: ms
-      description: Population standard deviation of the received ICMP RTT samples.
+      description: Population standard deviation of the received ICMP RTT 
+        samples.
       preprocessing:
       - type: JSONPATH
         parameters:
         - $.stddev
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
-      - tag: component
-        value: health
       - tag: component
         value: network
       triggers:
       - uuid: 80d9bf40f49a4fdf917c9371b0cfb0e3
-        expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.stddev,5m)>{$ADV_ICMP_STDDEV_WARN}
+        expression: avg(/Advanced ICMP Ping with 
+          Jitter/advanced.ping.stddev,5m)>{$ADV_ICMP_STDDEV_WARN}
         name: 'Advanced ICMP: High RTT standard deviation'
         opdata: 'Last value: {ITEM.LASTVALUE1}'
         status: DISABLED
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
+          expression: min(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.loss,#2)>{$ADV_ICMP_LOSS_WARN}
         - name: 'Advanced ICMP: Unavailable by ICMP ping'
-          expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
+          expression: max(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.rcv,#3)=0
+        - name: 'Advanced ICMP: Collector error'
+          expression: last(/Advanced ICMP Ping with 
+            Jitter/advanced.ping.error)<>""
+        tags:
+        - tag: scope
+          value: performance
     - uuid: cebaebd5d69049409b968486ffb96ae9
       name: 'Advanced ICMP: packets sent'
       type: DEPENDENT
@@ -229,20 +292,24 @@ zabbix_export:
         parameters:
         - $.xmt
       master_item:
-        key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+        key: 
+          advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
       tags:
-      - tag: application
-        value: status
+      - tag: component
+        value: network
     - uuid: d9869868444741b89cdca6911682582b
       name: 'Advanced ICMP: raw JSON results'
       type: EXTERNAL
-      key: advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
-      history: 90d
+      key: 
+        advanced_icmp_ping.py["{HOST.CONN}","{$ADV_FPING_POOL_COUNT}","{$ADV_FPING_INTERVAL_MS}","{$ADV_FPING_TIMEOUT_MS}"]
+      history: 1h
       value_type: TEXT
       timeout: 30s
       tags:
-      - tag: application
-        value: status
+      - tag: component
+        value: network
+      - tag: component
+        value: raw
     tags:
     - tag: class
       value: network
@@ -250,14 +317,17 @@ zabbix_export:
       value: icmp
     macros:
     - macro: '{$ADV_FPING_INTERVAL_MS}'
-      value: '100'
-      description: Interval between ICMP probes in milliseconds.
+      value: '250'
+      description: Period between probes in milliseconds. In fping count mode 
+        the timeout must not exceed this value.
     - macro: '{$ADV_FPING_POOL_COUNT}'
       value: '20'
-      description: Number of ICMP probes in each measurement batch. Use at least 10 for meaningful jitter.
+      description: Number of ICMP probes in each measurement batch. Use at least
+        10 for meaningful jitter.
     - macro: '{$ADV_FPING_TIMEOUT_MS}'
-      value: '1000'
-      description: Timeout for each ICMP probe in milliseconds.
+      value: '250'
+      description: Per-probe timeout in milliseconds. Must be less than or equal
+        to {$ADV_FPING_INTERVAL_MS}.
     - macro: '{$ADV_ICMP_JITTER_WARN}'
       value: '20'
       description: Jitter warning threshold in milliseconds.
@@ -272,7 +342,8 @@ zabbix_export:
       description: ms
     - macro: '{$ADV_ICMP_STDDEV_WARN}'
       value: '30'
-      description: RTT standard deviation warning threshold in milliseconds. The default trigger is disabled.
+      description: RTT standard deviation warning threshold in milliseconds. The
+        default trigger is disabled.
     dashboards:
     - uuid: 6fe11985dbcd469ea3f5d75b520a4ae9
       name: Advanced ICMP
@@ -293,13 +364,20 @@ zabbix_export:
             value: AAAAA
   triggers:
   - uuid: 78a9e6a9e9d34128b659e18871d6e3d1
-    expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,5m)>0 and avg(/Advanced ICMP Ping with Jitter/advanced.ping.max,5m)/avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,5m)>{$ADV_ICMP_MAX_TIME_MULTIPLE}
+    expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,5m)>0 and 
+      avg(/Advanced ICMP Ping with Jitter/advanced.ping.max,5m)/avg(/Advanced 
+      ICMP Ping with Jitter/advanced.ping.min,5m)>{$ADV_ICMP_MAX_TIME_MULTIPLE}
     name: 'Advanced ICMP: High time differences (Min/Max)'
     opdata: 'Last min: {ITEM.LASTVALUE2}, max: {ITEM.LASTVALUE1}'
     priority: WARNING
     dependencies:
     - name: 'Advanced ICMP: Unavailable by ICMP ping'
       expression: max(/Advanced ICMP Ping with Jitter/advanced.ping.rcv,#3)=0
+    - name: 'Advanced ICMP: Collector error'
+      expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
+    tags:
+    - tag: scope
+      value: performance
   graphs:
   - uuid: 41f93f2ee2b440bf953f7484c1883a25
     name: 'Advanced ICMP: latency, loss, jitter and deviation'
