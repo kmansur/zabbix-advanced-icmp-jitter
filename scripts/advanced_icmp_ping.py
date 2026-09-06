@@ -257,9 +257,7 @@ def main():
     environment = os.environ.copy()
     environment["LC_ALL"] = "C"
     environment["LANG"] = "C"
-    process_timeout = (
-        count * interval_ms + timeout_ms + PROCESS_MARGIN_MS
-    ) / 1000
+    process_timeout = (count * interval_ms + timeout_ms + PROCESS_MARGIN_MS) / 1000
 
     try:
         completed = subprocess.run(
