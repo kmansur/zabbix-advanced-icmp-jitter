@@ -8,16 +8,21 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.14"
 
@@ -35,19 +40,44 @@ jobs:
             exit 1
           fi
           python tools/validate_templates.py
+          python tools/validate_docs.py
           pytest -q
 
-      - name: Build release archive
+      - name: Build release archives
         shell: bash
         run: |
           set -euo pipefail
           version="$(tr -d '\r\n' < VERSION)"
-          package="zabbix-advanced-icmp-jitter-${version}"
-          mkdir -p "dist/${package}"
-          cp -r scripts templates docs "dist/${package}/"
-          cp README.md CHANGELOG.md LICENSE NOTICE.md VERSION "dist/${package}/"
-          cd dist
-          zip -r "${package}.zip" "${package}"
+          base="zabbix-advanced-icmp-jitter-${version}"
+          mkdir -p dist
+
+          full="dist/${base}"
+          mkdir -p "$full"
+          cp -r scripts templates docs "$full/"
+          cp README.md README.pt-BR.md \
+             CHANGELOG.md CHANGELOG.pt-BR.md \
+             CONTRIBUTING.md CONTRIBUTING.pt-BR.md \
+             SECURITY.md SECURITY.pt-BR.md \
+             NOTICE.md NOTICE.pt-BR.md \
+             LICENSE VERSION "$full/"
+          (cd dist && zip -qr "${base}.zip" "${base}")
+
+          for zabbix_version in 7.0 8.0; do
+            package="${base}-zabbix-${zabbix_version}"
+            root="dist/${package}"
+            mkdir -p "$root/scripts" "$root/templates/zabbix-${zabbix_version}"
+            cp scripts/advanced_icmp_ping.py "$root/scripts/"
+            cp templates/zabbix-${zabbix_version}/advanced-icmp-ping-with-jitter.yaml \
+               "$root/templates/zabbix-${zabbix_version}/"
+            cp -r docs "$root/"
+            cp README.md README.pt-BR.md \
+               CHANGELOG.md CHANGELOG.pt-BR.md \
+               LICENSE NOTICE.md NOTICE.pt-BR.md VERSION "$root/"
+            (cd dist && zip -qr "${package}.zip" "${package}")
+          done
+
+          (cd dist && sha256sum ./*.zip > SHA256SUMS)
+          cat dist/SHA256SUMS
 
       - name: Create GitHub Release
         env:
@@ -56,5 +86,8 @@ jobs:
           version="$(tr -d '\r\n' < VERSION)"
           gh release create "${GITHUB_REF_NAME}" \
             "dist/zabbix-advanced-icmp-jitter-${version}.zip" \
+            "dist/zabbix-advanced-icmp-jitter-${version}-zabbix-7.0.zip" \
+            "dist/zabbix-advanced-icmp-jitter-${version}-zabbix-8.0.zip" \
+            "dist/SHA256SUMS" \
             --title "Advanced ICMP Ping with Jitter ${GITHUB_REF_NAME}" \
             --generate-notes
