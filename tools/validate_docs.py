@@ -92,15 +92,9 @@ def validate_local_links():
             if target is None:
                 continue
             if not target.is_relative_to(ROOT):
-                fail(
-                    f"{source.relative_to(ROOT)} links outside the repository: "
-                    f"{destination!r}"
-                )
+                fail(f"{source.relative_to(ROOT)} links outside the repository: {destination!r}")
             if not target.exists():
-                fail(
-                    f"broken local link in {source.relative_to(ROOT)}: "
-                    f"{destination!r}"
-                )
+                fail(f"broken local link in {source.relative_to(ROOT)}: {destination!r}")
 
 
 def main():
