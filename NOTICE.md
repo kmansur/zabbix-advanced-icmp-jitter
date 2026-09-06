@@ -1,5 +1,7 @@
 # Notice
 
+**English** | [Português (Brasil)](NOTICE.pt-BR.md)
+
 `Advanced ICMP Ping with Jitter` is based on and inspired by the `AdvancedPING` project by Dusan Priechodsky:
 
 https://github.com/priechodsky/AdvancedPING
