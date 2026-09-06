@@ -18,297 +18,35 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: hardening/professionalization
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14'
+
       - name: Apply reviewed changes
-        shell: python
         run: |
-          from pathlib import Path
-          import re
+          python tools/_apply_native_review_fixes.py
+          # Workflow files cannot be pushed by the Actions token. The release
+          # workflow is updated separately through the repository API.
+          git checkout -- .github/workflows/release.yml
 
-          root = Path('.')
-
-          native = r'''zabbix_export:
-            version: '__VERSION__'
-            template_groups:
-            - uuid: 57b7ae836ca64446ba2c296389c009b7
-              name: Templates/Modules
-            templates:
-            - uuid: 90ee93df58a04a9892d301257559014f
-              template: 'Advanced ICMP Ping'
-              name: 'Advanced ICMP Ping'
-              description: |
-                Scalable ICMP monitoring using the native Zabbix ICMP pinger.
-
-                This template is intended for broad deployment across network devices and servers.
-                It uses Zabbix SIMPLE checks (icmpping, icmppingloss and icmppingsec), allowing
-                the Zabbix server/proxy to batch targets with identical parameters through its
-                dedicated ICMP pinger processes instead of starting a Python external check per host.
-
-                Use Advanced ICMP Ping with Jitter only on selected paths that require jitter and
-                RTT standard-deviation analysis.
-              vendor:
-                name: 'Net Tech'
-                version: 1.1.0
-              groups:
-              - name: Templates/Modules
-              items:
-              - uuid: 68c9176e4048453a98155391dfabb31e
-                name: 'Advanced ICMP: availability'
-                type: SIMPLE
-                key: 'icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}]'
-                delay: 1m
-                history: 30d
-                description: '1 when at least one probe in the batch replies; 0 when all probes fail.'
-                valuemap:
-                  name: 'Advanced ICMP service state'
-                tags:
-                - tag: component
-                  value: health
-                - tag: component
-                  value: network
-                triggers:
-                - uuid: c1298c34e363455aa5bc9b00c0c2d746
-                  expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=30 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=0'
-                  name: 'Advanced ICMP: Long unavailable by ICMP ping'
-                  opdata: 'Current state: {ITEM.LASTVALUE1}'
-                  priority: HIGH
-                  description: 'Thirty consecutive one-minute ICMP batches failed (approximately 30 minutes).'
-                  tags:
-                  - tag: scope
-                    value: availability
-                - uuid: 76fe29e0d3734253a163fce4611f9ce6
-                  expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=3 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=0 and (count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)<30 or max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)>0)'
-                  name: 'Advanced ICMP: Unavailable by ICMP ping'
-                  opdata: 'Current state: {ITEM.LASTVALUE1}'
-                  priority: AVERAGE
-                  description: 'Three consecutive one-minute ICMP batches failed (approximately 3 minutes). This event is mutually exclusive with the long-unavailable event.'
-                  tags:
-                  - tag: scope
-                    value: availability
-              - uuid: f88f68389ca9407e9c8db0f39f519961
-                name: 'Advanced ICMP: packet loss'
-                type: SIMPLE
-                key: 'icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}]'
-                delay: 1m
-                history: 30d
-                value_type: FLOAT
-                units: '%'
-                description: 'Percentage of packets lost in the native Zabbix ICMP batch.'
-                tags:
-                - tag: component
-                  value: health
-                - tag: component
-                  value: network
-                triggers:
-                - uuid: 4eb17eeb4ee647f59c23a5b842aea054
-                  expression: 'min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)<100'
-                  name: 'Advanced ICMP: High packet loss'
-                  opdata: 'Loss: {ITEM.LASTVALUE1} %'
-                  priority: WARNING
-                  description: 'Degraded connectivity with packet loss above the configured threshold in two consecutive batches. Complete loss is handled by the availability triggers.'
-                  dependencies:
-                  - name: 'Advanced ICMP: Unavailable by ICMP ping'
-                    expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=3 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=0 and (count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)<30 or max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)>0)'
-                  - name: 'Advanced ICMP: Long unavailable by ICMP ping'
-                    expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=30 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=0'
-                  tags:
-                  - tag: scope
-                    value: availability
-                  - tag: scope
-                    value: performance
-              - uuid: 36167d6ce99d4b44ac7634825583bcf7
-                name: 'Advanced ICMP: average response time'
-                type: SIMPLE
-                key: 'icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},avg]'
-                delay: 1m
-                history: 30d
-                value_type: FLOAT
-                units: ms
-                description: 'Average RTT from the native Zabbix ICMP batch, converted from seconds to milliseconds.'
-                preprocessing:
-                - type: MULTIPLIER
-                  parameters:
-                  - '1000'
-                tags:
-                - tag: component
-                  value: network
-                - tag: component
-                  value: performance
-                triggers:
-                - uuid: 91fece0752404939af8c88777e66b1ba
-                  expression: 'avg(/Advanced ICMP Ping/icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},avg],5m)>{$ADV_ICMP_RESPONSE_TIME_WARN}'
-                  name: 'Advanced ICMP: High response time'
-                  opdata: 'Average RTT: {ITEM.LASTVALUE1}'
-                  priority: WARNING
-                  dependencies:
-                  - name: 'Advanced ICMP: High packet loss'
-                    expression: 'min(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping/icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#2)<100'
-                  - name: 'Advanced ICMP: Unavailable by ICMP ping'
-                    expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=3 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#3)=0 and (count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)<30 or max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)>0)'
-                  - name: 'Advanced ICMP: Long unavailable by ICMP ping'
-                    expression: 'count(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=30 and max(/Advanced ICMP Ping/icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}],#30)=0'
-                  tags:
-                  - tag: scope
-                    value: performance
-              tags:
-              - tag: class
-                value: network
-              - tag: target
-                value: icmp
-              macros:
-              - macro: '{$ADV_ICMP_PACKETS}'
-                value: '20'
-                description: 'Number of native ICMP probes in each one-minute measurement batch.'
-              - macro: '{$ADV_ICMP_INTERVAL_MS}'
-                value: '250'
-                description: 'Period between probes in milliseconds.'
-              - macro: '{$ADV_ICMP_TIMEOUT_MS}'
-                value: '250'
-                description: 'Per-probe timeout in milliseconds.'
-              - macro: '{$ADV_ICMP_LOSS_WARN}'
-                value: '20'
-                description: 'Packet loss warning threshold in percent.'
-              - macro: '{$ADV_ICMP_RESPONSE_TIME_WARN}'
-                value: '200'
-                description: 'Average RTT warning threshold in milliseconds.'
-              valuemaps:
-              - uuid: 4778ae245e7a49a1821649965afc9a91
-                name: 'Advanced ICMP service state'
-                mappings:
-                - value: '0'
-                  newvalue: Down
-                - value: '1'
-                  newvalue: Up
-          '''
-          # The string above is indented for the workflow source; normalize it.
-          import textwrap
-          native = textwrap.dedent(native)
-          for version in ('7.0', '8.0'):
-              path = root / f'templates/zabbix-{version}/advanced-icmp-ping.yaml'
-              path.write_text(native.replace('__VERSION__', version), encoding='utf-8')
-
-          # Claude review: packet loss is a float contract. Preserve fractional values explicitly.
-          loss_pattern = re.compile(
-              r"(      key: advanced\.ping\.loss\n(?:      delay: '0'\n)?      history: 90d\n)(      units: '%')"
-          )
-          for version in ('7.0', '8.0'):
-              path = root / f'templates/zabbix-{version}/advanced-icmp-ping-with-jitter.yaml'
-              text = path.read_text(encoding='utf-8')
-              text, count = loss_pattern.subn(r"\1      value_type: FLOAT\n\2", text)
-              if count != 1:
-                  raise SystemExit(f'{path}: expected one packet-loss item, changed {count}')
-              path.write_text(text, encoding='utf-8')
-
-          validator = root / 'tools/validate_templates.py'
-          text = validator.read_text(encoding='utf-8')
-          text = text.replace('        "delay": str(item.get("delay", "")),\n', '')
-          text = text.replace(
-              'def validate_item_tags(exports):\n',
-              '''def validate_collector_float_contract(exports):\n    float_paths = {"$.avg", "$.jitter", "$.max", "$.min", "$.stddev", "$.loss"}\n    for version, (_, data) in exports.items():\n        for item in get_template(data).get("items", []):\n            if item.get("type") != "DEPENDENT":\n                continue\n            jsonpaths = {\n                str(value)\n                for step in item.get("preprocessing", [])\n                if step.get("type") == "JSONPATH"\n                for value in step.get("parameters", [])\n            }\n            if jsonpaths & float_paths and str(item.get("value_type", "UNSIGNED")) != "FLOAT":\n                fail(\n                    f"Zabbix {version}: dependent item {item.get('key')!r} maps a float "\n                    "collector field and must declare value_type FLOAT"\n                )\n\n\ndef validate_item_tags(exports):\n''',
-              1,
-          )
-          # Native template is intentionally lean: availability, loss and average RTT only.
-          text = re.sub(
-              r'def validate_native_template\(exports\):.*?\n\ndef main\(\):',
-              '''def validate_native_template(exports):\n    expected_keys = {\n        "icmpping[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}]",\n        "icmppingloss[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS}]",\n        "icmppingsec[,{$ADV_ICMP_PACKETS},{$ADV_ICMP_INTERVAL_MS},,{$ADV_ICMP_TIMEOUT_MS},avg]",\n    }\n    required_macros = {\n        "{$ADV_ICMP_PACKETS}": "20",\n        "{$ADV_ICMP_INTERVAL_MS}": "250",\n        "{$ADV_ICMP_TIMEOUT_MS}": "250",\n        "{$ADV_ICMP_LOSS_WARN}": "20",\n        "{$ADV_ICMP_RESPONSE_TIME_WARN}": "200",\n    }\n    for version, (_, data) in exports.items():\n        template = get_template(data)\n        if template.get("template") != "Advanced ICMP Ping":\n            fail(f"Zabbix {version}: unexpected native template name")\n        items = template.get("items", [])\n        if len(items) != 3 or {str(item.get("key", "")) for item in items} != expected_keys:\n            fail(f"Zabbix {version}: native template must contain exactly availability, loss and average RTT")\n        if any(item.get("type") != "SIMPLE" for item in items):\n            fail(f"Zabbix {version}: native ICMP items must all use SIMPLE checks")\n        for item in items:\n            if str(item.get("delay", "")) != "1m":\n                fail(f"Zabbix {version}: native ICMP item {item.get('key')!r} must use 1m interval")\n            if str(item.get("history", "")) != "30d":\n                fail(f"Zabbix {version}: native ICMP item {item.get('key')!r} must use 30d history")\n            key = str(item.get("key", ""))\n            if key.startswith("icmppingloss") or key.startswith("icmppingsec"):\n                if str(item.get("value_type", "UNSIGNED")) != "FLOAT":\n                    fail(f"Zabbix {version}: native item {key!r} must declare value_type FLOAT")\n            if key.startswith("icmppingsec"):\n                steps = normalize_preprocessing(item.get("preprocessing", []))\n                if ("MULTIPLIER", ("1000",), "", "") not in steps:\n                    fail(f"Zabbix {version}: native RTT item {key!r} must convert seconds to milliseconds")\n        macros = {m["macro"]: str(m.get("value", "")) for m in template.get("macros", [])}\n        for macro, expected in required_macros.items():\n            if macros.get(macro) != expected:\n                fail(f"Zabbix {version}: native macro {macro} must default to {expected}")\n        triggers = {trigger["name"]: trigger for trigger in collect_trigger_nodes(data).values()}\n        required_triggers = {\n            "Advanced ICMP: Unavailable by ICMP ping",\n            "Advanced ICMP: Long unavailable by ICMP ping",\n            "Advanced ICMP: High packet loss",\n            "Advanced ICMP: High response time",\n        }\n        if set(triggers) != required_triggers:\n            fail(f"Zabbix {version}: native template trigger set differs from policy")\n        short = triggers["Advanced ICMP: Unavailable by ICMP ping"]["expression"]\n        long = triggers["Advanced ICMP: Long unavailable by ICMP ping"]["expression"]\n        loss = triggers["Advanced ICMP: High packet loss"]["expression"]\n        if "count(/Advanced ICMP Ping/icmpping[" not in short or ",#3)=3" not in short or ",#30)<30" not in short:\n            fail(f"Zabbix {version}: short outage trigger must require 3 samples and stop before 30-sample outage")\n        if "count(/Advanced ICMP Ping/icmpping[" not in long or ",#30)=30" not in long or ",#30)=0" not in long:\n            fail(f"Zabbix {version}: long outage trigger must require 30 collected zero samples")\n        if ",#2)>{$ADV_ICMP_LOSS_WARN}" not in loss or "max(/Advanced ICMP Ping/icmppingloss[" not in loss or ",#2)<100" not in loss:\n            fail(f"Zabbix {version}: native packet loss trigger must require two degraded, non-total-loss samples")\n        for trigger in triggers.values():\n            if trigger["priority"] == "DISASTER":\n                fail(f"Zabbix {version}: native template must not use DISASTER severity")\n            if not any(name == "scope" for name, _ in trigger["tags"]):\n                fail(f"Zabbix {version}: native trigger {trigger['name']!r} has no scope tag")\n\n\ndef main():''',
-              text,
-              flags=re.S,
-          )
-          text = text.replace(
-              '    validate_macro_timing(jitter_exports)\n',
-              '    validate_macro_timing(jitter_exports)\n    validate_collector_float_contract(jitter_exports)\n',
-              1,
-          )
-          validator.write_text(text, encoding='utf-8')
-
-          tests = root / 'tests/test_advanced_icmp_ping.py'
-          text = tests.read_text(encoding='utf-8')
-          anchor = '''def test_stats_with_total_loss():\n'''
-          addition = '''def test_stats_preserves_fractional_packet_loss():\n    result = advanced_icmp_ping.stats([10.0, None, 12.0, 14.0, None, 16.0, 18.0])\n\n    assert result["loss"] == 28.571\n    assert isinstance(result["loss"], float)\n\n\n'''
-          if addition not in text:
-              text = text.replace(anchor, addition + anchor, 1)
-          tests.write_text(text, encoding='utf-8')
-
-          # Fix stale/unsafe examples in tuning docs and explain scale/retention.
-          for rel, language in (('docs/en/tuning.md', 'en'), ('docs/pt-BR/tuning.md', 'pt')):
-              path = root / rel
-              text = path.read_text(encoding='utf-8')
-              text = text.replace('{$ADV_FPING_INTERVAL_MS}=100\n{$ADV_FPING_TIMEOUT_MS}=1000', '{$ADV_FPING_INTERVAL_MS}=250\n{$ADV_FPING_TIMEOUT_MS}=250', 1)
-              text = text.replace('{$ADV_FPING_INTERVAL_MS}=50\n{$ADV_ICMP_JITTER_WARN}', '{$ADV_FPING_INTERVAL_MS}=50\n{$ADV_FPING_TIMEOUT_MS}=50\n{$ADV_ICMP_JITTER_WARN}', 1)
-              # Second 100ms profile must carry a compatible timeout as well.
-              marker = '{$ADV_FPING_INTERVAL_MS}=100\n{$ADV_ICMP_JITTER_WARN}'
-              text = text.replace(marker, '{$ADV_FPING_INTERVAL_MS}=100\n{$ADV_FPING_TIMEOUT_MS}=100\n{$ADV_ICMP_JITTER_WARN}', 1)
-              # Voice/video 50ms profile is the second occurrence after the LAN replacement.
-              marker = '{$ADV_FPING_INTERVAL_MS}=50\n{$ADV_ICMP_JITTER_WARN}'
-              text = text.replace(marker, '{$ADV_FPING_INTERVAL_MS}=50\n{$ADV_FPING_TIMEOUT_MS}=50\n{$ADV_ICMP_JITTER_WARN}', 1)
-              if language == 'en':
-                  text = text.replace(
-                      '## Environment scale\n\nOn servers or proxies monitoring many hosts:\n',
-                      '## Environment scale\n\nFor broad ICMP availability, packet-loss and average-RTT monitoring, prefer the `Advanced ICMP Ping` native template. Zabbix can batch targets that share identical ICMP parameters through dedicated pinger processes. Reserve `Advanced ICMP Ping with Jitter` for selected paths where jitter and RTT standard deviation justify a per-host external collector.\n\nOn servers or proxies monitoring many hosts with the jitter template:\n',
-                  )
-                  text += '\n## Retention\n\nThe native template defaults to 30 days of raw history. The jitter template currently keeps 90 days for its numeric metrics and 1 hour for raw JSON. Reduce raw history where database scale is more important than high-resolution forensic analysis; trends can preserve long-term numeric behavior at much lower storage cost.\n'
-              else:
-                  text = text.replace(
-                      '## Escala do ambiente\n\nEm servidores ou proxies que monitoram muitos hosts:\n',
-                      '## Escala do ambiente\n\nPara monitoramento amplo de disponibilidade ICMP, perda e RTT médio, prefira o template nativo `Advanced ICMP Ping`. O Zabbix consegue agrupar alvos que compartilham parâmetros ICMP idênticos nos processos dedicados de pinger. Reserve `Advanced ICMP Ping with Jitter` para caminhos selecionados onde jitter e desvio padrão de RTT justifiquem um coletor externo por host.\n\nEm servidores ou proxies que monitoram muitos hosts com o template de jitter:\n',
-                  )
-                  text += '\n## Retenção\n\nO template nativo usa por padrão 30 dias de histórico bruto. O template de jitter atualmente mantém 90 dias para métricas numéricas e 1 hora para o JSON bruto. Reduza o histórico bruto quando a escala do banco for mais importante que análise forense em alta resolução; trends preservam o comportamento numérico de longo prazo com custo muito menor.\n'
-              path.write_text(text, encoding='utf-8')
-
-          # Add a concise deployment-mode guide in both languages.
-          (root / 'docs/en/deployment-modes.md').write_text('''# Deployment modes\n\n[English](deployment-modes.md) | [Português (Brasil)](../pt-BR/deployment-modes.md)\n\nThe project provides two complementary monitoring modes.\n\n## Advanced ICMP Ping — native, scalable default\n\nUse `advanced-icmp-ping.yaml` for broad deployment. It uses Zabbix `SIMPLE` checks:\n\n- `icmpping` for reachability;\n- `icmppingloss` for packet loss;\n- `icmppingsec` in `avg` mode for average RTT.\n\nAll three run through the Zabbix server/proxy ICMP pinger. Targets with identical item-key parameters can be grouped and checked by `fping` in parallel, avoiding a Python process per monitored host. The default update interval is one minute, with short unavailability at about 3 minutes and long unavailability at about 30 minutes.\n\n## Advanced ICMP Ping with Jitter — selective advanced statistics\n\nUse `advanced-icmp-ping-with-jitter.yaml` only where you need individual RTT samples, jitter, population standard deviation, or min/max from the same packet batch. Its master item is an `EXTERNAL` check: the Zabbix server/proxy starts the Python collector, which starts `fping`, for each linked host and collection cycle.\n\nTypical selective targets include WAN gateways, site-to-site links, firewalls, edge routers, voice/video paths, and links under troubleshooting.\n\nDo not link both templates to the same host unless you intentionally want both native baseline monitoring and the additional external statistical workload.\n''', encoding='utf-8')
-          (root / 'docs/pt-BR/deployment-modes.md').write_text('''# Modos de implantação\n\n[English](../en/deployment-modes.md) | **Português (Brasil)**\n\nO projeto oferece dois modos complementares de monitoramento.\n\n## Advanced ICMP Ping — padrão nativo e escalável\n\nUse `advanced-icmp-ping.yaml` para aplicação ampla. Ele usa checks `SIMPLE` nativos do Zabbix:\n\n- `icmpping` para disponibilidade;\n- `icmppingloss` para perda de pacotes;\n- `icmppingsec` em modo `avg` para RTT médio.\n\nOs três são executados pelos processos ICMP pinger do Zabbix server/proxy. Alvos com parâmetros de chave idênticos podem ser agrupados e verificados pelo `fping` em paralelo, evitando um processo Python por host monitorado. O intervalo padrão é de um minuto, com indisponibilidade curta em aproximadamente 3 minutos e prolongada em aproximadamente 30 minutos.\n\n## Advanced ICMP Ping with Jitter — estatística avançada seletiva\n\nUse `advanced-icmp-ping-with-jitter.yaml` somente onde forem necessárias amostras individuais de RTT, jitter, desvio padrão populacional ou min/max do mesmo lote de pacotes. Seu item mestre é um check `EXTERNAL`: o Zabbix server/proxy inicia o coletor Python, que inicia o `fping`, para cada host vinculado e ciclo de coleta.\n\nAlvos típicos incluem gateways WAN, enlaces entre sites, firewalls, roteadores de borda, caminhos de voz/vídeo e enlaces em troubleshooting.\n\nNão vincule os dois templates ao mesmo host, a menos que queira intencionalmente o baseline nativo e também a carga estatística externa adicional.\n''', encoding='utf-8')
-
-          # Link the new guide from both documentation indexes.
-          for rel, link in (
-              ('docs/en/README.md', '- [Deployment modes: native vs. jitter](deployment-modes.md)\n'),
-              ('docs/pt-BR/README.md', '- [Modos de implantação: nativo vs. jitter](deployment-modes.md)\n'),
-          ):
-              path = root / rel
-              text = path.read_text(encoding='utf-8')
-              marker = '## Documentation\n\n' if '/en/' in rel else '## Documentação\n\n'
-              if link not in text:
-                  text = text.replace(marker, marker + link, 1)
-              path.write_text(text, encoding='utf-8')
-
-          # Make execution location explicit in installation docs.
-          for rel, language in (('docs/en/installation.md', 'en'), ('docs/pt-BR/installation.md', 'pt')):
-              path = root / rel
-              text = path.read_text(encoding='utf-8')
-              if language == 'en':
-                  block = '''\n## Choose the deployment mode\n\nFor most hosts, import and use `advanced-icmp-ping.yaml`. It needs `fping` on the Zabbix server/proxy but does not require the Python external collector. Use `advanced-icmp-ping-with-jitter.yaml` only for selected targets that need jitter or RTT standard deviation.\n\nThe jitter template executes the `EXTERNAL` master item on the Zabbix server/proxy, not on the monitored host. Each linked host therefore starts one Python/`fping` collector execution per collection cycle.\n'''
-                  anchor = '## Installing dependencies\n'
-              else:
-                  block = '''\n## Escolha do modo de implantação\n\nPara a maioria dos hosts, importe e use `advanced-icmp-ping.yaml`. Ele precisa do `fping` no Zabbix server/proxy, mas não exige o coletor externo Python. Use `advanced-icmp-ping-with-jitter.yaml` somente nos alvos selecionados que precisam de jitter ou desvio padrão de RTT.\n\nO template de jitter executa o item mestre `EXTERNAL` no Zabbix server/proxy, não no host monitorado. Portanto, cada host vinculado inicia uma execução Python/`fping` por ciclo de coleta.\n'''
-                  anchor = '## Instalação das dependências\n'
-              if block.strip() not in text:
-                  text = text.replace(anchor, block + '\n' + anchor, 1)
-              path.write_text(text, encoding='utf-8')
-
-          # Package both templates in per-version releases.
-          release = root / '.github/workflows/release.yml'
-          text = release.read_text(encoding='utf-8')
-          old = '''            cp templates/zabbix-${zabbix_version}/advanced-icmp-ping-with-jitter.yaml \\\n               "$root/templates/zabbix-${zabbix_version}/"\n'''
-          new = '''            cp templates/zabbix-${zabbix_version}/*.yaml \\\n               "$root/templates/zabbix-${zabbix_version}/"\n'''
-          if old not in text:
-              raise SystemExit('release workflow template copy block not found')
-          release.write_text(text.replace(old, new, 1), encoding='utf-8')
-
-          # Remove this one-shot workflow from the final tree.
-          (root / '.github/workflows/_apply-native-review-fixes.yml').unlink()
       - name: Validate repository
         run: |
           python -m pip install -r requirements-dev.txt
+          ruff format tools/validate_templates.py tests/test_advanced_icmp_ping.py
           python tools/validate_templates.py
           python tools/validate_docs.py
           python -m compileall -q scripts tools tests
           ruff check scripts tools tests
           ruff format --check scripts tools tests
           pytest -q
+
       - name: Commit reviewed implementation
         run: |
-          git config user.name "Karim Mansur"
-          git config user.email "karim.mansur@outlook.com"
+          git config user.name 'Karim Mansur'
+          git config user.email 'karim.mansur@outlook.com'
           git add -A
           git diff --cached --check
-          git commit -m "feat: add native ICMP mode and incorporate review fixes"
+          git commit -m 'feat: add native ICMP mode and incorporate review fixes'
           git push origin HEAD:hardening/professionalization
