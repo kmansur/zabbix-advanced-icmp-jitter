@@ -1,5 +1,7 @@
 # Versionamento
 
+[English](../en/versioning.md) | **Português (Brasil)**
+
 ## Versão atual
 
 O projeto mantém atualmente a versão histórica:
@@ -42,7 +44,7 @@ GitHub Release          v1.1.0
 ## Regras
 
 - alterações somente de documentação/repositório não exigem bump do template;
-- qualquer mudança funcional em item, trigger, macro ou coletor deve ser registrada no `CHANGELOG.md`;
+- qualquer mudança funcional em item, trigger, macro ou coletor deve ser registrada no `CHANGELOG.md` e `CHANGELOG.pt-BR.md`;
 - os exports mantidos devem usar a mesma `vendor.version` quando representam a mesma release funcional;
 - uma atualização específica apenas de serialização para uma nova build do Zabbix não deve inventar uma nova versão funcional sem necessidade;
 - tags de release usam prefixo `v`.
