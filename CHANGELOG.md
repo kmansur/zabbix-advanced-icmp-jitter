@@ -1,5 +1,7 @@
 # Changelog
 
+**English** | [Português (Brasil)](CHANGELOG.pt-BR.md)
+
 All notable changes to `Advanced ICMP Ping with Jitter` are documented here.
 
 The template version is stored in the Zabbix export under:
@@ -20,7 +22,8 @@ vendor:
 - Added CI for Python 3.9, 3.13, and 3.14 with compile checks, Ruff, pytest, and Zabbix template validation.
 - Added CodeQL, Dependabot, tagged release automation, PR template, and structured issue forms.
 - Added `SECURITY.md`, `CONTRIBUTING.md`, `NOTICE.md`, `.editorconfig`, `.gitattributes`, `.gitignore`, `pyproject.toml`, and development dependency definitions.
-- Split the Brazilian Portuguese documentation into installation, configuration, metrics, triggers, tuning, troubleshooting, Zabbix 8.0 compatibility, and versioning guides.
+- Added complete mirrored English and Brazilian Portuguese documentation for installation, configuration, metrics, triggers, tuning, troubleshooting, Zabbix 8.0 compatibility, and versioning.
+- Added `README.pt-BR.md`, `CONTRIBUTING.pt-BR.md`, `SECURITY.pt-BR.md`, `NOTICE.pt-BR.md`, and `CHANGELOG.pt-BR.md`.
 
 ### Changed
 
@@ -28,6 +31,7 @@ vendor:
 - Moved the example graph image to `docs/images/advanced-icmp-ping.png`.
 - Simplified the root `README.md` into a project landing page with compatibility, quick-start, development, and documentation links.
 - Documented that the current `1.0-10` version remains unchanged for repository-only reorganization and that the next functional release will transition to Semantic Versioning.
+- Standardized language links so English and Brazilian Portuguese documentation are clearly separated.
 
 ## [1.0-10] - 2026-05-11
 
