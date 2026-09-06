@@ -114,7 +114,7 @@ The release workflow requires `VERSION`, the Zabbix `vendor.version`, the Git ta
 
 ## License and attribution
 
-This project is based on `AdvancedPING` by Dusan Priechodsky and is distributed under the GNU General Public License v3.0 (GPL-3.0).
+This project is based on [AdvancedPING](https://github.com/priechodsky/AdvancedPING) by Dusan Priechodsky and is distributed under the GNU General Public License v3.0 (GPL-3.0).
 
 See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 
