@@ -332,15 +332,17 @@ def validate_trigger_policy(exports):
         packet_loss = names.get(HIGH_PACKET_LOSS_TRIGGER)
         if packet_loss is None:
             fail(f"Zabbix {version}: high packet loss trigger not found")
-        if "min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)" not in packet_loss[
-            "expression"
-        ]:
+        if (
+            "min(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)"
+            not in packet_loss["expression"]
+        ):
             fail(f"Zabbix {version}: packet loss trigger must evaluate both latest samples")
 
         for trigger in triggers.values():
-            if "last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)" in trigger[
-                "expression"
-            ]:
+            if (
+                "last(/Advanced ICMP Ping with Jitter/advanced.ping.loss,#2)"
+                in trigger["expression"]
+            ):
                 fail(f"Zabbix {version}: trigger {trigger['name']!r} uses last(...,#2) incorrectly")
 
             for _, expression in trigger["dependencies"]:
