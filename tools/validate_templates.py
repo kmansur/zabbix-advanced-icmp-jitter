@@ -60,8 +60,12 @@ def load_exports(filename):
         path = version_dir / filename
         if not path.is_file():
             fail(f"missing {path.relative_to(ROOT)}")
-        with path.open(encoding="utf-8") as handle:
-            data = yaml.safe_load(handle)
+        raw = path.read_text(encoding="utf-8")
+        if "{${" in raw:
+            fail(f"{path.relative_to(ROOT)} contains malformed Zabbix user macro syntax")
+        if re.search(r"(^|\s)[&*]id[0-9]+", raw):
+            fail(f"{path.relative_to(ROOT)} must not contain YAML aliases/anchors")
+        data = yaml.safe_load(raw)
         try:
             export_version = str(data["zabbix_export"]["version"])
         except (KeyError, TypeError):

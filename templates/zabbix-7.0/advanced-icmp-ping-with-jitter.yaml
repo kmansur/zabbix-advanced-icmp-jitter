@@ -75,12 +75,12 @@ zabbix_export:
         value: performance
       triggers:
       - uuid: f751fa9758054945915c723f0239f4e2
-        expression: avg(/Advanced ICMP Ping with Jitter/icmppingsec[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS},avg],5m)>{${ADV_ICMP_RESPONSE_TIME_WARN}} and max(/Advanced ICMP Ping with Jitter/icmpping[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#3)>0
+        expression: avg(/Advanced ICMP Ping with Jitter/icmppingsec[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS},avg],5m)>{$ADV_ICMP_RESPONSE_TIME_WARN} and max(/Advanced ICMP Ping with Jitter/icmpping[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#3)>0
         name: 'Advanced ICMP: High response time'
         priority: WARNING
         dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: min(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)>{${ADV_ICMP_LOSS_WARN}} and max(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)<100
+          expression: min(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)<100
         tags:
         - tag: scope
           value: performance
@@ -100,7 +100,7 @@ zabbix_export:
         value: network
       triggers:
       - uuid: bb58843328ad49e6a9ac912dc5941998
-        expression: min(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)>{${ADV_ICMP_LOSS_WARN}} and max(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)<100
+        expression: min(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)<100
         name: 'Advanced ICMP: High packet loss'
         priority: WARNING
         description: Packet loss stayed above the threshold for two native ICMP batches. Total loss is handled by availability triggers.
@@ -131,12 +131,12 @@ zabbix_export:
         value: performance
       triggers:
       - uuid: 9a9d437b891c4763a44dfe3f9505e7da
-        expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.jitter,10m)>{${ADV_ICMP_JITTER_WARN}} and max(/Advanced ICMP Ping with Jitter/icmpping[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#3)>0
+        expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.jitter,10m)>{$ADV_ICMP_JITTER_WARN} and max(/Advanced ICMP Ping with Jitter/icmpping[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#3)>0
         name: 'Advanced ICMP: High jitter'
         priority: WARNING
-        dependencies: &id001
+        dependencies:
         - name: 'Advanced ICMP: High packet loss'
-          expression: min(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)>{${ADV_ICMP_LOSS_WARN}} and max(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)<100
+          expression: min(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)<100
         - name: 'Advanced ICMP: Collector error'
           expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         tags:
@@ -164,11 +164,15 @@ zabbix_export:
         value: performance
       triggers:
       - uuid: 80d9bf40f49a4fdf917c9371b0cfb0e3
-        expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.stddev,10m)>{${ADV_ICMP_STDDEV_WARN}} and max(/Advanced ICMP Ping with Jitter/icmpping[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#3)>0
+        expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.stddev,10m)>{$ADV_ICMP_STDDEV_WARN} and max(/Advanced ICMP Ping with Jitter/icmpping[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#3)>0
         name: 'Advanced ICMP: High RTT standard deviation'
         priority: WARNING
         status: DISABLED
-        dependencies: *id001
+        dependencies:
+        - name: 'Advanced ICMP: High packet loss'
+          expression: min(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)<100
+        - name: 'Advanced ICMP: Collector error'
+          expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
         tags:
         - tag: scope
           value: performance
@@ -316,10 +320,14 @@ zabbix_export:
         newvalue: Up
   triggers:
   - uuid: 78a9e6a9e9d34128b659e18871d6e3d1
-    expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,10m)>0 and avg(/Advanced ICMP Ping with Jitter/advanced.ping.max,10m)/avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,10m)>{${ADV_ICMP_MAX_TIME_MULTIPLE}} and max(/Advanced ICMP Ping with Jitter/icmpping[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#3)>0
+    expression: avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,10m)>0 and avg(/Advanced ICMP Ping with Jitter/advanced.ping.max,10m)/avg(/Advanced ICMP Ping with Jitter/advanced.ping.min,10m)>{$ADV_ICMP_MAX_TIME_MULTIPLE} and max(/Advanced ICMP Ping with Jitter/icmpping[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#3)>0
     name: 'Advanced ICMP: High time differences (Min/Max)'
     priority: WARNING
-    dependencies: *id001
+    dependencies:
+    - name: 'Advanced ICMP: High packet loss'
+      expression: min(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)>{$ADV_ICMP_LOSS_WARN} and max(/Advanced ICMP Ping with Jitter/icmppingloss[,{$ADV_FPING_POOL_COUNT},{$ADV_FPING_INTERVAL_MS},,{$ADV_FPING_TIMEOUT_MS}],#2)<100
+    - name: 'Advanced ICMP: Collector error'
+      expression: last(/Advanced ICMP Ping with Jitter/advanced.ping.error)<>""
     tags:
     - tag: scope
       value: performance
