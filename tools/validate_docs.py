@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Validate English and Brazilian Portuguese documentation parity."""
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS_EN = ROOT / "docs" / "en"
